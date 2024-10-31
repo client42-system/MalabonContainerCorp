@@ -1,0 +1,75 @@
+/* SignUp.css */
+.flex {
+    display: flex;
+  }
+  
+  .items-center {
+    align-items: center;
+  }
+  
+  .justify-center {
+    justify-content: center;
+  }
+  
+  .min-h-screen {
+    min-height: 100vh;
+  }
+  
+  .bg-gray-100 {
+    background-color: #f7fafc; /* Light gray background */
+  }
+  
+  .card {
+    width: 100%; /* Full width of the parent container */
+    max-width: 600px; /* Set a maximum width */
+    padding: 24px; /* Increased padding for a better look */
+    border-radius: 0.375rem; /* Border radius */
+    background-color: white; /* White background for the card */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center items horizontally */
+  }
+  
+  h1 {
+    font-size: 1.5rem; /* Larger font size for the main heading */
+    text-align: center; /* Center heading text */
+  }
+  
+  h2 {
+    font-size: 1.25rem; /* Adjust the size of the subtitle */
+    text-align: center; /* Center subtitle text */
+  }
+  
+  .label {
+    font-size: 0.875rem; /* Font size for labels */
+    color: #4a5568; /* Text color */
+  }
+  
+  .input,
+  .select {
+    margin-top: 0.25rem; /* Space above input/select */
+    width: 100%; /* Full width */
+    border: 1px solid #cbd5e0; /* Border color */
+    border-radius: 0.375rem; /* Rounded corners */
+    padding: 0.5rem; /* Padding inside the input */
+  }
+  
+  .input:focus,
+  .select:focus {
+    border-color: #63b3ed; /* Change border color on focus */
+    outline: none; /* Remove outline */
+    box-shadow: 0 0 0 1px rgba(99, 189, 237, 0.5); /* Focus shadow */
+  }
+  
+  .button {
+    padding: 0.5rem 1rem; /* Button padding */
+  }
+  
+  .text-xs {
+    font-size: 0.75rem; /* Small text */
+    text-align: center; /* Center text */
+    margin-top: 1rem; /* Space above small text */
+    color: #a0aec0; /* Light gray color */
+  }
+  

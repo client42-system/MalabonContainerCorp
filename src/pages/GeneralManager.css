@@ -1,0 +1,789 @@
+/* Add wrapper class */
+.general-manager {
+  overflow: hidden;
+}
+
+.general-manager .dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.general-manager .dashboard-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 20px 0;
+  color: #2c3e50;
+  text-align: center; /* Add this line */
+}
+
+.general-manager .tabs-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.general-manager .tabs {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  padding: 5px;
+}
+
+.general-manager .tab {
+  padding: 10px 20px;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7f8c8d;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+}
+
+.general-manager .tab.active {
+  background-color: #3498db;
+  color: white;
+}
+
+.general-manager .tab:hover {
+  background-color: #e0e0e0;
+}
+
+.general-manager .tab-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 160px);
+  overflow: hidden; /* Changed from overflow-y: auto */
+}
+
+/* When tab-content is inside production-analytics, override the overflow */
+.general-manager .production-analytics .tab-content {
+  overflow: hidden;
+}
+
+.general-manager .production-analytics {
+  height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-right: 15px;
+}
+
+.general-manager .graphs-container {
+  display: flex;
+  flex-direction: column; /* Changed from row to column */
+  gap: 20px;
+  height: 100%;
+}
+
+.general-manager .graph-wrapper {
+  flex: 1;
+  min-width: 0;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.general-manager .graph-wrapper h3 {
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.general-manager .table-container {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 20px;
+  max-height: calc(100vh - 300px);
+}
+
+.general-manager table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.general-manager th, td {
+  padding: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.general-manager .logout-button {
+  position: fixed;
+  top: 20px;
+  right: 40px;
+  z-index: 1000;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .general-manager .dashboard-container {
+    padding: 10px;
+  }
+
+  .general-manager .dashboard-title {
+    font-size: 20px;
+  }
+
+  .general-manager .tabs {
+    flex-wrap: wrap;
+  }
+
+  .general-manager .tab {
+    margin-bottom: 5px;
+    font-size: 12px;
+  }
+
+  .general-manager .graph-wrapper h3 {
+    font-size: 14px;
+  }
+
+  .general-manager th, td {
+    font-size: 12px;
+  }
+}
+
+/* Add this new style for the chart container */
+.general-manager .chart-container {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 400px;
+  margin-bottom: 30px;
+}
+
+.general-manager .accept-btn, .general-manager .reject-btn, .general-manager .view-btn {
+  padding: 5px 15px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.general-manager .accept-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.general-manager .reject-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.general-manager .view-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+/* Add these styles at the end of the file */
+
+.general-manager .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.general-manager .modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+}
+
+.general-manager .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Add these styles at the end of the file */
+
+.general-manager .order-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.general-manager .order-details-table th,
+.general-manager .order-details-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.general-manager .order-details-table th {
+  font-weight: bold;
+  width: 40%;
+  color: #2c3e50;
+  background-color: #f8f9fa;
+}
+
+.general-manager .order-details-table td {
+  color: #34495e;
+}
+
+.general-manager .order-details-table tr:last-child th,
+.general-manager .order-details-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Update these styles in your GeneralManager.css file */
+
+.general-manager .action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  width: 100%; /* Make container full width */
+}
+
+.general-manager .view-btn,
+.general-manager .accept-btn,
+.general-manager .reject-btn {
+  flex: 1; /* Make all buttons equal width */
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: 90px; /* Set minimum width for buttons */
+}
+
+/* Ensure the action column is wide enough */
+.general-manager .order-table th:nth-child(8),
+.general-manager .order-table td:nth-child(8) {
+  width: 300px; /* Increase width for action column */
+  min-width: 300px; /* Ensure minimum width */
+  padding-right: 20px;
+}
+
+/* Keep existing button colors */
+.general-manager .accept-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.general-manager .reject-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.general-manager .view-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+/* Hover effects */
+.general-manager .accept-btn:hover {
+  background-color: #27ae60;
+}
+
+.general-manager .reject-btn:hover {
+  background-color: #c0392b;
+}
+
+.general-manager .view-btn:hover {
+  background-color: #2980b9;
+}
+
+.general-manager .accept-btn svg,
+.general-manager .reject-btn svg,
+.general-manager .view-btn svg {
+  margin-right: 5px;
+}
+
+.general-manager .order-table td:last-child {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .general-manager .action-buttons {
+    flex-direction: column;
+  }
+
+  .general-manager .accept-btn,
+  .general-manager .reject-btn,
+  .general-manager .view-btn {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+
+.general-manager .order-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  min-width: 1200px;
+}
+
+.general-manager .order-table thead {
+  position: sticky;
+  top: 0;
+  background-color: #f8f9fa;
+  z-index: 1;
+}
+
+.general-manager .order-table th,
+.general-manager .order-table td {
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Adjust column widths */
+.general-manager .order-table th:nth-child(1),
+.general-manager .order-table td:nth-child(1) { width: 10%; } /* Order ID */
+
+.general-manager .order-table th:nth-child(2),
+.general-manager .order-table td:nth-child(2) { width: 15%; } /* Customer */
+
+.general-manager .order-table th:nth-child(3),
+.general-manager .order-table td:nth-child(3) { width: 10%; } /* Type */
+
+.general-manager .order-table th:nth-child(4),
+.general-manager .order-table td:nth-child(4) { width: 10%; } /* Quantity */
+
+.general-manager .order-table th:nth-child(5),
+.general-manager .order-table td:nth-child(5) { width: 10%; } /* Amount */
+
+.general-manager .order-table th:nth-child(6),
+.general-manager .order-table td:nth-child(6) { width: 10%; } /* Date */
+
+.general-manager .order-table th:nth-child(7),
+.general-manager .order-table td:nth-child(7) { width: 10%; } /* Status */
+
+.general-manager .order-table th:nth-child(8),
+.general-manager .order-table td:nth-child(8) { width: 25%; } /* Action */
+
+.general-manager .order-table th:nth-child(9),
+.general-manager .order-table td:nth-child(9) { width: 10%; } /* Contact Number */
+
+.general-manager .order-table th:nth-child(10),
+.general-manager .order-table td:nth-child(10) { width: 10%; } /* Notes */
+
+.general-manager .order-table th:nth-child(11),
+.general-manager .order-table td:nth-child(11) { width: 8%; } /* Action */
+
+/* Allow address and notes to wrap if necessary */
+.general-manager .order-table td:nth-child(8),
+.general-manager .order-table td:nth-child(10) {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 200px; /* Adjust as needed */
+}
+
+@media (max-width: 1200px) {
+  .general-manager .table-container {
+    overflow-x: scroll;
+  }
+}
+
+/* Add or update this style */
+.general-manager .order-table th,
+.general-manager .maintenance-table th {
+  font-weight: 700;
+}
+
+/* Add this new style to create a container for the tabs */
+.general-manager .tabs-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Make sure no parent elements have overflow: auto or overflow-y: auto */
+#root {
+  overflow: hidden;
+}
+
+.general-manager .orders {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.general-manager .graph-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.general-manager .graph-wrapper h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.general-manager .logout-button {
+  position: fixed;
+  top: 20px;
+  right: 40px;
+  z-index: 1000;
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.general-manager .logout-button:hover {
+  background-color: #3498db;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.general-manager .logout-button svg {
+  font-size: 16px;
+}
+
+/* Add custom scrollbar for production analytics */
+.general-manager .production-analytics::-webkit-scrollbar {
+  width: 8px;
+}
+
+.general-manager .production-analytics::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.general-manager .production-analytics::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.general-manager .production-analytics::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* For Firefox */
+.general-manager .production-analytics {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Update graph wrapper styles */
+.general-manager .graph-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.general-manager .chart-container {
+  height: 400px;
+  width: 100%;
+  position: relative;
+}
+
+/* Remove any hover effects or interactive styles */
+.general-manager .production-analytics {
+  pointer-events: none; /* This disables interactions with the graphs */
+}
+
+/* But allow scrolling */
+.general-manager .production-analytics {
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+/* Keep chart interactions disabled */
+.general-manager .chart-container {
+  pointer-events: none;
+}
+
+.general-manager .maintenance-section {
+  height: calc(100vh - 120px);
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.general-manager .maintenance-header {
+  padding: 24px 32px;
+  background-color: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.general-manager .section-title {
+  font-size: 24px;
+  color: #1e293b;
+  margin-bottom: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.general-manager .stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 20px;
+}
+
+.general-manager .stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  min-width: 180px;
+}
+
+.general-manager .stat-icon {
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.general-manager .stat-icon.total { background-color: #eff6ff; color: #3b82f6; }
+.general-manager .stat-icon.active { background-color: #fef3c7; color: #d97706; }
+.general-manager .stat-icon.completed { background-color: #dcfce7; color: #16a34a; }
+
+.general-manager .stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.general-manager .stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.general-manager .stat-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.general-manager .maintenance-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+
+.general-manager .tasks-container {
+  display: flex;
+  gap: 32px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.general-manager .active-tasks-section {
+  flex: 1;
+}
+
+.general-manager .completed-tasks-section {
+  width: 380px;
+}
+
+.general-manager .section-header {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.general-manager .section-header h3 {
+  font-size: 18px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.general-manager .tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.general-manager .task-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease;
+}
+
+.general-manager .task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.general-manager .task-priority {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.general-manager .priority-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.general-manager .priority-indicator.high { background-color: #ef4444; }
+.general-manager .priority-indicator.medium { background-color: #f59e0b; }
+.general-manager .priority-indicator.low { background-color: #10b981; }
+
+.general-manager .task-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.general-manager .task-description {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.general-manager .task-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.general-manager .due-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+}
+
+.general-manager .task-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background-color: #f1f5f9;
+  color: #475569;
+  font-weight: 500;
+}
+
+.general-manager .completed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.general-manager .completed-task-item {
+  background-color: white;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.general-manager .completed-task-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.general-manager .equipment-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.general-manager .completion-date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.general-manager .completed-description {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Custom scrollbar */
+.general-manager .maintenance-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.general-manager .maintenance-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.general-manager .maintenance-content::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.general-manager .maintenance-content::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+@media (max-width: 1200px) {
+  .general-manager .tasks-container {
+    flex-direction: column;
+  }
+
+  .general-manager .completed-tasks-section {
+    width: 100%;
+  }
+}

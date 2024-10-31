@@ -1,0 +1,375 @@
+.plant-manager {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.plant-manager .dashboard-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.plant-manager .dashboard-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 20px 0;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.plant-manager .tabs-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.plant-manager .tabs {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  padding: 5px;
+}
+
+.plant-manager .tab {
+  padding: 10px 20px;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7f8c8d;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+}
+
+.plant-manager .tab.active {
+  background-color: #3498db;
+  color: white;
+}
+
+.plant-manager .tab:hover {
+  background-color: #e0e0e0;
+}
+
+.plant-manager .tab-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+.plant-manager .orders-table {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.plant-manager .order-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  table-layout: auto;
+}
+
+.plant-manager .order-table th,
+.plant-manager .order-table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.plant-manager .order-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.plant-manager .order-table tr {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.plant-manager .order-table tr:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.plant-manager .status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.plant-manager .status-badge.accepted {
+  background-color: #e8f5e9;
+  color: #2ecc71;
+}
+
+.plant-manager .status-badge.completed {
+  background-color: #e3f2fd;
+  color: #3498db;
+}
+
+.plant-manager .status-badge.out-for-delivery {
+  background-color: #fff3e0;
+  color: #f39c12;
+}
+
+.plant-manager .action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 200px;
+}
+
+.plant-manager .complete-btn,
+.plant-manager .view-btn,
+.plant-manager .schedule-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+.plant-manager .complete-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.plant-manager .complete-btn:hover {
+  background-color: #27ae60;
+}
+
+.plant-manager .view-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.plant-manager .view-btn:hover {
+  background-color: #2980b9;
+}
+
+.plant-manager .schedule-btn {
+  background-color: #f39c12;
+  color: white;
+}
+
+.plant-manager .schedule-btn:hover {
+  background-color: #d68910;
+}
+
+.plant-manager .logout-button {
+  position: fixed;
+  top: 20px;
+  right: 40px;
+  z-index: 1000;
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.plant-manager .logout-button:hover {
+  background-color: #3498db;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.plant-manager .logout-button svg {
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .plant-manager .tabs {
+    flex-direction: column;
+  }
+
+  .plant-manager .tab {
+    margin-bottom: 10px;
+  }
+
+  .plant-manager .action-buttons {
+    flex-direction: column;
+  }
+}
+
+.plant-manager .order-table th:nth-child(5),
+.plant-manager .order-table td:nth-child(5) {
+  width: 15%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plant-manager .complete-btn svg,
+.plant-manager .view-btn svg,
+.plant-manager .schedule-btn svg {
+  margin-right: 4px;
+  font-size: 12px;
+}
+
+/* Modal styles */
+.plant-manager .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.plant-manager .modal-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.plant-manager .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.plant-manager .order-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.plant-manager .order-details-table th,
+.plant-manager .order-details-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.plant-manager .order-details-table th {
+  font-weight: 600;
+  color: #2c3e50;
+  width: 40%;
+}
+
+.plant-manager .order-details-table td {
+  color: #34495e;
+}
+
+.plant-manager .modal-content h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+/* Schedule Delivery Modal styles */
+.plant-manager .modal-content.schedule-modal {
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.plant-manager .schedule-modal h2 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.plant-manager .schedule-modal .form-group {
+  margin-bottom: 20px;
+}
+
+.plant-manager .schedule-modal label {
+  display: block;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.plant-manager .schedule-modal input[type="date"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.plant-manager .schedule-modal .button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.plant-manager .schedule-modal .button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.plant-manager .schedule-modal .button:first-child {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.plant-manager .schedule-modal .button-secondary {
+  background-color: #e74c3c;
+  color: white;
+}
