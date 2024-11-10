@@ -20,7 +20,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "public/favicon.ico",
@@ -49,9 +51,11 @@
     "chart.js": "^4.4.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dexie": "^4.0.9",
     "firebase": "^11.0.1",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "localforage": "^1.10.0",
     "lucide-react": "^0.454.0",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
@@ -66,7 +70,6 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.0.1",
     "cross-env": "^7.0.3",
-    "electron": "^33.0.2",
     "electron-builder": "^25.1.8",
     "electron-is-dev": "^3.0.1",
     "electron-squirrel-startup": "^1.0.1",

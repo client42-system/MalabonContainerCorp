@@ -6,6 +6,7 @@ import { auth, db } from '../firebaseConfig';
 import { collection, addDoc, getDocs, query, orderBy, runTransaction, doc, where, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function MarketingDashboard() {
   const [activeTab, setActiveTab] = useState('purchased');
@@ -31,9 +32,17 @@ function MarketingDashboard() {
   const [paymentModal, setPaymentModal] = useState({ isOpen: false, order: null, amountPaid: '' });
 
   useEffect(() => {
-    fetchPurchasedOrders();
-    fetchMonthlyOrders();
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchPurchasedOrders();
+        fetchMonthlyOrders();
+      } else {
+        navigate('/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     const total = purchasedOrders.reduce((sum, order) => sum + order.quantity, 0);
@@ -43,8 +52,13 @@ function MarketingDashboard() {
   const fetchPurchasedOrders = async () => {
     console.log("Fetching purchased orders");
     try {
+      if (!auth.currentUser) {
+        console.error('No authenticated user');
+        navigate('/login');
+        return;
+      }
+
       const ordersRef = collection(db, 'orders');
-      // Remove orderBy and handle sorting in JavaScript
       const q = query(
         ordersRef,
         where('status', '!=', 'REJECTED')
@@ -54,14 +68,17 @@ function MarketingDashboard() {
       const orders = querySnapshot.docs
         .map(doc => ({
           id: doc.id,
+          firestoreId: doc.id,
           ...doc.data()
         }))
-        // Sort the results in JavaScript instead
         .sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+      
       setPurchasedOrders(orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
+      if (error.code === 'permission-denied') {
+        navigate('/login');
+      }
     }
   };
 
@@ -188,18 +205,25 @@ function MarketingDashboard() {
     }
   };
 
-  const handlePaymentClick = (order) => {
-    const formattedOrder = {
-      ...order,
-      amount: order.amount || 0,
-      firestoreId: order.firestoreId // Make sure this is available
-    };
-    
-    setPaymentModal({
-      isOpen: true,
-      order: formattedOrder,
-      amountPaid: formattedOrder.amount.toString()
-    });
+  const handlePaymentClick = async (order) => {
+    try {
+      if (!order.firestoreId) {
+        console.error('Order Firestore ID is missing');
+        return;
+      }
+
+      const orderRef = doc(db, 'orders', order.firestoreId);
+      await updateDoc(orderRef, {
+        paymentStatus: 'PAID',
+        paymentDate: new Date().toISOString()
+      });
+
+      // Refresh orders after updating
+      fetchPurchasedOrders();
+      
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    }
   };
 
   const handlePaymentSubmit = async () => {
@@ -496,8 +520,15 @@ function MarketingDashboard() {
                       View
                     </button>
                     {order.paymentStatus !== 'Paid' && (
-                      <button className="pay-btn" onClick={() => handlePaymentClick(order)}>
-                        Pay
+                      <button 
+                        className="pay-btn"
+                        onClick={() => setPaymentModal({ 
+                          isOpen: true, 
+                          order: order, 
+                          amountPaid: ''
+                        })}
+                      >
+                        <FaMoneyBillWave /> Pay
                       </button>
                     )}
                   </div>
@@ -635,3 +666,4 @@ function MarketingDashboard() {
 }
 
 export default MarketingDashboard;
+
