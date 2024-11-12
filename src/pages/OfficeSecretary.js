@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaSignOutAlt, FaArchive, FaFileAlt, FaSearch, FaDownload, FaTools } from 'react-icons/fa';
+import { FaSignOutAlt, FaArchive, FaFileAlt, FaSearch, FaDownload, FaTools, FaUserCog, FaUserPlus, FaTrash, FaBan, FaKey } from 'react-icons/fa';
+import { X } from 'lucide-react';
 import '../pages/OfficeSecretary.css';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebaseConfig';
-import { collection, getDocs, query, where, orderBy, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import AdminPanel from '../components/AdminPanel';
 
 export default function OfficeSecretaryDashboard() {
   const [activeTab, setActiveTab] = useState('archivedOrders');
@@ -14,6 +17,20 @@ export default function OfficeSecretaryDashboard() {
   const [error, setError] = useState(null);
   const [paymentReports, setPaymentReports] = useState([]);
   const [archivedMaintenance, setArchivedMaintenance] = useState([]);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    jobPosition: '',
+    name: '',
+    employeeId: ''
+  });
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    userId: null,
+    userName: ''
+  });
 
   const navigate = useNavigate();
 
@@ -21,6 +38,7 @@ export default function OfficeSecretaryDashboard() {
     fetchArchivedOrders();
     fetchPaymentReports();
     fetchArchivedMaintenance();
+    fetchUsers();
   }, []);
 
   const fetchArchivedOrders = async () => {
@@ -83,6 +101,20 @@ export default function OfficeSecretaryDashboard() {
       setArchivedMaintenance(maintenance);
     } catch (error) {
       console.error('Error fetching archived maintenance:', error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const usersRef = collection(db, 'users');
+      const snapshot = await getDocs(usersRef);
+      const usersList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setUsers(usersList);
+    } catch (error) {
+      console.error('Error fetching users:', error);
     }
   };
 
@@ -260,6 +292,66 @@ export default function OfficeSecretaryDashboard() {
     );
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        newUser.email,
+        newUser.password
+      );
+
+      await addDoc(collection(db, 'users'), {
+        uid: userCredential.user.uid,
+        ...newUser,
+        createdBy: auth.currentUser.uid,
+        createdAt: new Date().toISOString()
+      });
+
+      alert('User created successfully');
+      setNewUser({ email: '', password: '', jobPosition: '', name: '', employeeId: '' });
+      setIsCreateUserModalOpen(false);
+      fetchUsers();
+    } catch (error) {
+      alert(`Error creating user: ${error.message}`);
+    }
+  };
+
+  const handleResetPassword = async (userEmail) => {
+    try {
+      await sendPasswordResetEmail(auth, userEmail);
+      alert('Password reset email sent successfully');
+    } catch (error) {
+      alert(`Error sending reset email: ${error.message}`);
+    }
+  };
+
+  const handleDisableAccount = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      const currentStatus = userDoc.data().disabled;
+      
+      await updateDoc(userRef, {
+        disabled: !currentStatus
+      });
+      alert(`Account ${!currentStatus ? 'disabled' : 'enabled'} successfully`);
+      fetchUsers();
+    } catch (error) {
+      alert(`Error updating account status: ${error.message}`);
+    }
+  };
+
+  const handleDeleteAccount = async (userId) => {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      setDeleteConfirmation({ isOpen: false, userId: null, userName: '' });
+      fetchUsers();
+    } catch (error) {
+      alert(`Error deleting account: ${error.message}`);
+    }
+  };
+
   return (
     <div className="office-secretary">
       <div className="dashboard-container">
@@ -286,6 +378,12 @@ export default function OfficeSecretaryDashboard() {
             onClick={() => setActiveTab('archivedMaintenance')}
           >
             <FaTools /> Archived Maintenance
+          </button>
+          <button 
+            className={`tab ${activeTab === 'admin' ? 'active' : ''}`}
+            onClick={() => setActiveTab('admin')}
+          >
+            <FaUserCog /> Admin Panel
           </button>
         </div>
         
@@ -348,10 +446,158 @@ export default function OfficeSecretaryDashboard() {
 
           {activeTab === 'paymentReports' && renderPaymentReports()}
           {activeTab === 'archivedMaintenance' && renderArchivedMaintenance()}
+          {activeTab === 'admin' && (
+            <div className="admin-section">
+              <div className="admin-header">
+                <h2>User Management</h2>
+                <button 
+                  className="create-user-btn"
+                  onClick={() => setIsCreateUserModalOpen(true)}
+                >
+                  <FaUserPlus /> Create New User
+                </button>
+              </div>
+              
+              <div className="users-list">
+                <h3>Existing Users</h3>
+                <div className="table-container">
+                  <table className="users-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Position</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map(user => (
+                        <tr key={user.id}>
+                          <td>{user.name}</td>
+                          <td>{user.email}</td>
+                          <td>{user.jobPosition}</td>
+                          <td className="action-buttons">
+                            <button 
+                              className="reset-btn"
+                              onClick={() => handleResetPassword(user.email)}
+                            >
+                              <FaKey /> Reset Password
+                            </button>
+                            <button 
+                              className="disable-btn"
+                              onClick={() => handleDisableAccount(user.id)}
+                            >
+                              <FaBan /> {user.disabled ? 'Enable' : 'Disable'}
+                            </button>
+                            <button 
+                              className="delete-btn"
+                              onClick={() => setDeleteConfirmation({ 
+                                isOpen: true, 
+                                userId: user.id, 
+                                userName: user.name 
+                              })}
+                            >
+                              <FaTrash /> Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Create User Modal */}
+              {isCreateUserModalOpen && (
+                <div className="modal-overlay">
+                  <div className="modal-content">
+                    <button 
+                      className="modal-close"
+                      onClick={() => setIsCreateUserModalOpen(false)}
+                    >
+                      <X size={20} />
+                    </button>
+                    <h2>Create New User</h2>
+                    <form onSubmit={handleCreateUser} className="create-user-form">
+                      <div className="form-group">
+                        <input
+                          type="text"
+                          placeholder="Full Name"
+                          value={newUser.name}
+                          onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <input
+                          type="password"
+                          placeholder="Password"
+                          value={newUser.password}
+                          onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <select
+                          value={newUser.jobPosition}
+                          onChange={(e) => setNewUser({...newUser, jobPosition: e.target.value})}
+                          required
+                        >
+                          <option value="">Select Position</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Plant Manager">Plant Manager</option>
+                          <option value="Accountant">Accountant</option>
+                          <option value="Plant Supervisor">Plant Supervisor</option>
+                          <option value="Office Secretary">Office Secretary</option>
+                        </select>
+                      </div>
+                      <button type="submit" className="create-btn">
+                        <FaUserPlus /> Create User
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {selectedOrder && renderOrderDetails()}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmation.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content delete-confirmation">
+            <h2>Delete Account</h2>
+            <p>Are you sure you want to delete the account for {deleteConfirmation.userName}?</p>
+            <p className="warning-text">This action cannot be undone.</p>
+            <div className="confirmation-buttons">
+              <button 
+                className="cancel-btn"
+                onClick={() => setDeleteConfirmation({ isOpen: false, userId: null, userName: '' })}
+              >
+                Cancel
+              </button>
+              <button 
+                className="confirm-delete-btn"
+                onClick={() => handleDeleteAccount(deleteConfirmation.userId)}
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

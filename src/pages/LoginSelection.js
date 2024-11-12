@@ -45,22 +45,6 @@ export default function LoginSelection() {
         </div>
         <p className="text-sm text-gray-500 text-center">Protected by company security policy</p>
       </div>
-      <div className="absolute bottom-4 right-4 flex space-x-2">
-        <button
-          onClick={() => navigate('/signup')}
-          className="text-sm bg-gray-200 hover:bg-green-800 hover:text-white text-gray-800 py-2 px-4 rounded flex items-center border border-black"
-        >
-          <UserPlus className="w-4 h-4 mr-1" />
-          <span>Sign Up New User</span>
-        </button>
-        <button
-          onClick={() => navigate('/forgot-password')}
-          className="text-sm bg-gray-200 hover:bg-green-800 hover:text-white text-gray-800 py-2 px-4 rounded flex items-center border border-black"
-        >
-          <Key className="w-4 h-4 mr-1" />
-          <span>Forgot Password</span>
-        </button>
-      </div>
     </div>
   );
 }

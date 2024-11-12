@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Shield } from 'lucide-react';
@@ -10,6 +10,7 @@ import './ForgotPassword.css';
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const { position } = useParams();
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ export default function ForgotPassword() {
       <Card className="w-full max-w-md p-6">
         <div className="flex flex-col items-center mb-6">
           <Shield className="w-12 h-12 text-gray-600 mb-2" />
-          <h1 className="text-2xl font-bold">Forgot Password</h1>
+          <h1 className="text-2xl font-bold">Forgot Password - {position}</h1>
         </div>
         <form onSubmit={handleForgotPassword} className="space-y-4">
           <div>

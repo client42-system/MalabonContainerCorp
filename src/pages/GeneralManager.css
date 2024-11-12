@@ -787,3 +787,240 @@
     width: 100%;
   }
 }
+
+/* Add these admin panel specific styles */
+.general-manager .admin-section {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.general-manager .admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.general-manager .admin-header h2 {
+  font-size: 24px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.general-manager .create-user-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.general-manager .create-user-btn:hover {
+  background-color: #2980b9;
+}
+
+/* Table styles */
+.general-manager .users-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.general-manager .users-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: #7f8c8d;
+  font-weight: 600;
+  border-bottom: 2px solid #eee;
+}
+
+.general-manager .users-table td {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.general-manager .users-table tr td:first-child {
+  border-left: 1px solid #eee;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.general-manager .users-table tr td:last-child {
+  border-right: 1px solid #eee;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Action buttons */
+.general-manager .action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.general-manager .reset-btn,
+.general-manager .disable-btn,
+.general-manager .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.3s;
+}
+
+.general-manager .reset-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.general-manager .disable-btn {
+  background-color: #f39c12;
+  color: white;
+}
+
+.general-manager .delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.general-manager .reset-btn:hover,
+.general-manager .disable-btn:hover,
+.general-manager .delete-btn:hover {
+  opacity: 0.9;
+}
+
+/* Fix tab content height */
+.general-manager .tab-content {
+  height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding: 20px;
+  background: #f5f7fa;
+}
+
+/* Fix container and scrolling issues */
+.general-manager {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.general-manager .dashboard-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* Adjust tab content to prevent double scrollbars */
+.general-manager .tab-content {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  min-height: 0; /* Important for flex containers */
+}
+
+/* Adjust production analytics container */
+.general-manager .production-analytics {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px; /* Add some padding for the scrollbar */
+}
+
+/* Adjust maintenance container */
+.general-manager .maintenance-container {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Ensure charts and tables don't cause horizontal scroll */
+.general-manager .chart-container,
+.general-manager .table-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Remove any nested scrollable containers */
+.general-manager .production-section,
+.general-manager .maintenance-section {
+  height: auto;
+  overflow: visible;
+}
+
+/* Common scrollbar styling for all tabs */
+.general-manager .tab-content,
+.general-manager .orders-container,
+.general-manager .maintenance-container,
+.general-manager .admin-section,
+.general-manager .production-analytics {
+  /* Firefox scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 transparent;
+}
+
+/* Webkit scrollbar styling (Chrome, Safari, Edge) */
+.general-manager .tab-content::-webkit-scrollbar,
+.general-manager .orders-container::-webkit-scrollbar,
+.general-manager .maintenance-container::-webkit-scrollbar,
+.general-manager .admin-section::-webkit-scrollbar,
+.general-manager .production-analytics::-webkit-scrollbar {
+  width: 6px; /* Consistent width */
+  height: 6px; /* For horizontal scrollbars if any */
+}
+
+.general-manager .tab-content::-webkit-scrollbar-track,
+.general-manager .orders-container::-webkit-scrollbar-track,
+.general-manager .maintenance-container::-webkit-scrollbar-track,
+.general-manager .admin-section::-webkit-scrollbar-track,
+.general-manager .production-analytics::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0; /* Add space at top and bottom for rounded ends */
+}
+
+.general-manager .tab-content::-webkit-scrollbar-thumb,
+.general-manager .orders-container::-webkit-scrollbar-thumb,
+.general-manager .maintenance-container::-webkit-scrollbar-thumb,
+.general-manager .admin-section::-webkit-scrollbar-thumb,
+.general-manager .production-analytics::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 20px; /* Fully rounded ends */
+  border: 2px solid transparent; /* Creates padding effect */
+  background-clip: padding-box;
+  min-height: 40px; /* Minimum thumb size */
+}
+
+.general-manager .tab-content::-webkit-scrollbar-thumb:hover,
+.general-manager .orders-container::-webkit-scrollbar-thumb:hover,
+.general-manager .maintenance-container::-webkit-scrollbar-thumb:hover,
+.general-manager .admin-section::-webkit-scrollbar-thumb:hover,
+.general-manager .production-analytics::-webkit-scrollbar-thumb:hover {
+  background-color: #a0aec0;
+}
+
+/* Container adjustments for consistent scrollbar appearance */
+.general-manager .tab-content,
+.general-manager .orders-container,
+.general-manager .maintenance-container,
+.general-manager .admin-section,
+.general-manager .production-analytics {
+  padding-right: 12px; /* Consistent padding for scrollbar */
+  margin-right: -6px; /* Offset padding to maintain alignment */
+}

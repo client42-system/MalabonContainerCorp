@@ -12,10 +12,12 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { FaChartLine, FaClipboardList, FaTools, FaSignOutAlt, FaCheck, FaTimes, FaEye, FaCalendar } from 'react-icons/fa';
+import { FaChartLine, FaClipboardList, FaTools, FaSignOutAlt, FaCheck, FaTimes, FaEye, FaCalendar, FaUserCog, FaUserPlus, FaKey, FaBan, FaTrash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebaseConfig';
-import { collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot, where, addDoc, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot, where, addDoc, limit, deleteDoc, getDoc } from 'firebase/firestore';
+import AdminPanel from '../components/AdminPanel';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 ChartJS.register(
   CategoryScale,
@@ -37,12 +39,27 @@ function GeneralManager() {
   const [weeklyProductionData, setWeeklyProductionData] = useState(null);
   const [monthlyProductionData, setMonthlyProductionData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    jobPosition: '',
+    name: '',
+    employeeId: ''
+  });
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    userId: null,
+    userName: ''
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = fetchOrders();
     fetchMaintenanceTasks();
     fetchProductionData();
+    fetchUsers();
 
     return () => unsubscribe();
   }, []);
@@ -540,6 +557,92 @@ function GeneralManager() {
     );
   };
 
+  const handleDeleteAccount = async (userId) => {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      setDeleteConfirmation({ isOpen: false, userId: null, userName: '' });
+      // Refresh users list after deletion
+      fetchUsers();
+    } catch (error) {
+      alert(`Error deleting account: ${error.message}`);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const usersData = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const handleDisableAccount = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      const currentStatus = userDoc.data().disabled;
+      
+      await updateDoc(userRef, {
+        disabled: !currentStatus
+      });
+      alert(`Account ${!currentStatus ? 'disabled' : 'enabled'} successfully`);
+      fetchUsers();
+    } catch (error) {
+      alert(`Error updating account status: ${error.message}`);
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        newUser.email,
+        newUser.password
+      );
+
+      // Add user details to Firestore
+      await addDoc(collection(db, 'users'), {
+        uid: userCredential.user.uid,
+        email: newUser.email,
+        name: newUser.name,
+        jobPosition: newUser.jobPosition,
+        employeeId: newUser.employeeId,
+        disabled: false,
+        createdAt: new Date().toISOString()
+      });
+
+      // Reset form and close modal
+      setNewUser({
+        email: '',
+        password: '',
+        jobPosition: '',
+        name: '',
+        employeeId: ''
+      });
+      setIsCreateUserModalOpen(false);
+      fetchUsers();
+      alert('User created successfully!');
+    } catch (error) {
+      alert(`Error creating user: ${error.message}`);
+    }
+  };
+
+  const handleResetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert('Password reset email sent successfully!');
+    } catch (error) {
+      alert(`Error sending password reset email: ${error.message}`);
+    }
+  };
+
   return (
     <div className="general-manager">
       <div className="dashboard-container">
@@ -567,13 +670,103 @@ function GeneralManager() {
             >
               <FaTools /> Maintenance
             </button>
+            <button 
+              className={`tab ${activeTab === 'admin' ? 'active' : ''}`}
+              onClick={() => setActiveTab('admin')}
+            >
+              <FaUserCog /> Admin Panel
+            </button>
           </div>
         </div>
         <div className="tab-content">
           {activeTab === 'productionAnalytics' && renderProductionAnalytics()}
           {activeTab === 'orders' && renderOrders()}
           {activeTab === 'maintenance' && renderMaintenanceTasks()}
-          {selectedOrder && renderOrderDetails()}
+          {activeTab === 'admin' && (
+            <div className="admin-section">
+              <div className="admin-header">
+                <h2>User Management</h2>
+                <button 
+                  className="create-user-btn"
+                  onClick={() => setIsCreateUserModalOpen(true)}
+                >
+                  <FaUserPlus /> Create New User
+                </button>
+              </div>
+              
+              <div className="users-list">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Position</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(user => (
+                      <tr key={user.id}>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.jobPosition}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <button 
+                              className="reset-btn"
+                              onClick={() => handleResetPassword(user.email)}
+                            >
+                              <FaKey /> Reset Password
+                            </button>
+                            <button 
+                              className="disable-btn"
+                              onClick={() => handleDisableAccount(user.id)}
+                            >
+                              <FaBan /> {user.disabled ? 'Enable' : 'Disable'}
+                            </button>
+                            <button 
+                              className="delete-btn"
+                              onClick={() => setDeleteConfirmation({ 
+                                isOpen: true, 
+                                userId: user.id, 
+                                userName: user.name 
+                              })}
+                            >
+                              <FaTrash /> Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {/* Delete Confirmation Modal */}
+          {deleteConfirmation.isOpen && (
+            <div className="modal-overlay">
+              <div className="modal-content delete-confirmation">
+                <h2>Delete Account</h2>
+                <p>Are you sure you want to delete the account for {deleteConfirmation.userName}?</p>
+                <p className="warning-text">This action cannot be undone.</p>
+                <div className="confirmation-buttons">
+                  <button 
+                    className="cancel-btn"
+                    onClick={() => setDeleteConfirmation({ isOpen: false, userId: null, userName: '' })}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="confirm-delete-btn"
+                    onClick={() => handleDeleteAccount(deleteConfirmation.userId)}
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

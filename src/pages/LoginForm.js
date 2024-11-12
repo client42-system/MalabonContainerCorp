@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, Lock, Tag, Factory, Calculator, ClipboardList, User, Crown } from 'lucide-react';
+import { Briefcase, Lock, Tag, Factory, Calculator, ClipboardList, User, Crown, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase Auth method
 import { auth } from '../firebaseConfig'; // Import the configured Firebase instance
@@ -92,7 +92,14 @@ function LoginForm() {
 
   return (
     <div className="container flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-sm">
+      <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-sm relative">
+        <button 
+          onClick={() => navigate('/login')} 
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+        >
+          <X size={20} />
+        </button>
+        
         <div className="logo">
           {IconComponent && <IconComponent size={32} />}
         </div>
@@ -110,7 +117,7 @@ function LoginForm() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-gray-300 p-2 rounded-md"
+              className="border border-gray-300 p-2 rounded-md w-full mb-4"
               required
             />
           </div>
@@ -121,19 +128,24 @@ function LoginForm() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="border border-gray-300 p-2 rounded-md"
+              className="border border-gray-300 p-2 rounded-md w-full mb-4"
               required
             />
           </div>
-          <div className="buttons flex justify-between">
+          <div className="flex justify-end mb-4">
             <button
               type="button"
-              onClick={() => navigate('/login')} // Navigate back to the LoginSelection page
-              className="bg-gray-200 p-2 rounded-md"
+              onClick={() => navigate(`/forgot-password/${position}`)}
+              className="text-sm text-blue-600 hover:text-blue-800"
             >
-              Back
+              Forgot Password?
             </button>
-            <button type="submit" className="bg-blue-600 text-white p-2 rounded-md flex items-center">
+          </div>
+          <div className="flex flex-col items-center space-y-4">
+            <button 
+              type="submit" 
+              className="bg-blue-600 text-white p-2 rounded-md flex items-center justify-center w-full"
+            >
               <Lock size={16} className="mr-1" />
               Login
             </button>

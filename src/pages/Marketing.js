@@ -7,6 +7,7 @@ import { collection, addDoc, getDocs, query, orderBy, runTransaction, doc, where
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 import { onAuthStateChanged } from 'firebase/auth';
+import { calculateOrderAmount } from '../utils/priceUtils';
 
 function MarketingDashboard() {
   const [activeTab, setActiveTab] = useState('purchased');
@@ -158,6 +159,7 @@ function MarketingDashboard() {
 
       // Create the new order document
       const orderRef = doc(collection(db, 'orders'));
+      const amount = await calculateOrderAmount(newOrder.type, parseInt(newOrder.quantity));
       await setDoc(orderRef, {
         id: orderID,
         customer: newOrder.customer,
@@ -168,7 +170,8 @@ function MarketingDashboard() {
         notes: newOrder.notes,
         date: new Date().toISOString(),
         status: 'Pending',
-        paymentStatus: 'Unpaid', // Add this line
+        paymentStatus: 'Unpaid',
+        amount: amount
       });
 
       console.log('New order added successfully');
@@ -583,10 +586,12 @@ function MarketingDashboard() {
         {isNewOrderModalOpen && (
           <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-content new-order-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="close-modal" onClick={closeModal}>
-                <FaTimes />
-              </button>
-              <h2>New Order</h2>
+              <div className="modal-header">
+                <h2>New Order</h2>
+                <button className="close-button" onClick={closeModal}>
+                  <FaTimes />
+                </button>
+              </div>
               <form onSubmit={handleNewOrder}>
                 <div className="form-group">
                   <label htmlFor="customer">Customer:</label>
@@ -612,6 +617,16 @@ function MarketingDashboard() {
                   </select>
                 </div>
                 <div className="form-group">
+                  <label htmlFor="contactNumber">Contact Number:</label>
+                  <input
+                    type="tel"
+                    id="contactNumber"
+                    value={newOrder.contactNumber}
+                    onChange={(e) => setNewOrder({...newOrder, contactNumber: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="form-group">
                   <label htmlFor="quantity">Quantity:</label>
                   <input
                     type="number"
@@ -628,16 +643,6 @@ function MarketingDashboard() {
                     id="address"
                     value={newOrder.address}
                     onChange={(e) => setNewOrder({...newOrder, address: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="contactNumber">Contact Number:</label>
-                  <input
-                    type="tel"
-                    id="contactNumber"
-                    value={newOrder.contactNumber}
-                    onChange={(e) => setNewOrder({...newOrder, contactNumber: e.target.value})}
                     required
                   />
                 </div>

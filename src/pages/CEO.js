@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSignOutAlt, FaChartLine, FaMoneyBillWave, FaTruck, FaCog } from 'react-icons/fa';
+import { FaSignOutAlt, FaChartLine, FaMoneyBillWave, FaTruck, FaCog, FaFileImport } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebaseConfig';
 import { collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
@@ -257,12 +257,18 @@ export default function CEO() {
       const ordersRef = collection(db, 'orders');
       const querySnapshot = await getDocs(ordersRef);
       
+      const PRICES = {
+        'Plain': 117,
+        'Lithograph': 315,
+        'Class C': 115
+      };
+
       const orders = querySnapshot.docs.map(doc => {
         const data = doc.data();
         
-        // Calculate total amount based on quantity and a base price
-        const basePrice = 100; // Example base price per unit
-        const calculatedAmount = Number(data.quantity) * basePrice;
+        // Calculate total amount using correct prices
+        const price = PRICES[data.type] || PRICES['Plain']; // Default to Plain price if type not found
+        const calculatedAmount = Number(data.quantity) * price;
 
         return {
           id: doc.id,
@@ -706,6 +712,13 @@ export default function CEO() {
               onClick={() => setActiveTab('maintenance')}
             >
               <FaCog /> Maintenance Analytics
+            </button>
+
+            <button 
+              className="tab"
+              onClick={() => navigate('/data-import')}
+            >
+              <FaFileImport /> Import Data
             </button>
           </div>
         </div>

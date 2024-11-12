@@ -1,110 +1,109 @@
-/* Add wrapper class */
+/* Base styles */
 .marketing {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f5f7fa;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  scrollbar-width: none;
 }
 
 .marketing .dashboard-container {
-  padding: 20px;
-  /* ... rest of styles ... */
-}
-
-/* Update all selectors to be prefixed with .marketing */
-.marketing .marketing-header {
-  text-align: center;
-  /* ... rest of styles ... */
-}
-
-/* Fix modal */
-.marketing .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  overflow: hidden;
+  height: calc(100vh - 10px);
   padding: 20px;
 }
 
-/* Fix table scrolling */
+/* Tab content and table container */
+.marketing .tab-content {
+  height: calc(100vh - 120px);
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
 .marketing .table-container {
   width: 100%;
+  height: calc(100% - 100px);
+  overflow-y: auto;
   overflow-x: auto;
-  margin-top: 20px;
+  margin-top: 0;
+  padding-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
 }
 
-.marketing .order-table {
+/* Table styles */
+.marketing .order-table,
+.marketing .customer-table {
   width: 100%;
   min-width: 900px;
   border-collapse: separate;
   border-spacing: 0 8px;
   table-layout: fixed;
+  margin-bottom: 20px;
 }
 
-/* Column widths */
+/* Column widths for order table */
 .marketing .order-table th:nth-child(1),
 .marketing .order-table td:nth-child(1) { width: 12%; } /* ORDER ID */
-
 .marketing .order-table th:nth-child(2),
 .marketing .order-table td:nth-child(2) { width: 15%; } /* CUSTOMER */
-
 .marketing .order-table th:nth-child(3),
 .marketing .order-table td:nth-child(3) { width: 10%; } /* TYPE */
-
 .marketing .order-table th:nth-child(4),
 .marketing .order-table td:nth-child(4) { width: 10%; } /* QUANTITY */
-
 .marketing .order-table th:nth-child(5),
 .marketing .order-table td:nth-child(5) { width: 12%; } /* AMOUNT */
-
 .marketing .order-table th:nth-child(6),
 .marketing .order-table td:nth-child(6) { width: 15%; } /* PAYMENT STATUS */
-
 .marketing .order-table th:nth-child(7),
 .marketing .order-table td:nth-child(7) { width: 12%; } /* DATE */
-
 .marketing .order-table th:nth-child(8),
 .marketing .order-table td:nth-child(8) { width: 14%; } /* ACTION */
 
 /* Table header and cell styles */
 .marketing .order-table th,
-.marketing .order-table td {
+.marketing .order-table td,
+.marketing .customer-table th,
+.marketing .customer-table td {
   padding: 12px 16px;
   text-align: left;
   vertical-align: middle;
 }
 
-.marketing .order-table th {
+.marketing .order-table th,
+.marketing .customer-table th {
   background-color: #f8f9fa;
   font-weight: 700;
   color: #2c3e50;
   text-transform: uppercase;
   font-size: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.marketing .order-table td {
+.marketing .order-table td,
+.marketing .customer-table td {
   background-color: white;
 }
 
-/* Action buttons container */
+/* Action buttons */
 .marketing .action-buttons-container {
   display: flex;
   gap: 8px;
   justify-content: flex-start;
 }
 
-/* Button styles */
 .marketing .view-btn,
 .marketing .pay-btn {
   padding: 6px 12px;
   border: none;
-  border-radius: 4px; 
+  border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -124,7 +123,7 @@
   color: white;
 }
 
-/* Status badge styles */
+/* Status badges */
 .marketing .status-badge {
   padding: 4px 8px;
   border-radius: 12px;
@@ -143,488 +142,7 @@
   background-color: #e74c3c;
 }
 
-/* Update tab selection color */
-.marketing .tab.active {
-  background-color: #3498db;
-  color: white;
-}
-
-/* Style new order button */
-.marketing .add-order-btn {
-  background-color: #2ecc71;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-/* Style new order modal */
-.marketing .new-order-modal {
-  background-color: white;
-  padding: 24px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  position: relative;
-}
-
-.marketing .new-order-modal .form-group {
-  margin-bottom: 16px;
-  width: 100%;
-}
-
-.marketing .new-order-modal label {
-  display: block;
-  margin-bottom: 8px;
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.marketing .new-order-modal input,
-.marketing .new-order-modal select,
-.marketing .new-order-modal textarea {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.marketing .new-order-modal textarea {
-  min-height: 80px;
-  resize: vertical;
-}
-
-.marketing .new-order-modal .close-modal {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #95a5a6;
-  cursor: pointer;
-  padding: 5px;
-}
-
-.marketing .new-order-modal .action-buttons-container {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 24px;
-  max-width: 280px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.marketing .new-order-modal .submit-btn {
-  background-color: #2ecc71;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: auto;
-}
-
-.marketing .new-order-modal .submit-btn:hover {
-  background-color: #27ae60;
-}
-
-/* Add custom scrollbar for modal */
-.marketing .new-order-modal::-webkit-scrollbar {
-  width: 6px;
-}
-
-.marketing .new-order-modal::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.marketing .new-order-modal::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.marketing .new-order-modal::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Close button styling */
-.marketing .new-order-modal .close-modal {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
-  border: none;
-  font-size: 18px;
-  color: #95a5a6;
-  cursor: pointer;
-  padding: 5px;
-}
-
-.marketing .new-order-modal .close-modal:hover {
-  color: #7f8c8d;
-}
-
-/* Fix logout button positioning */
-.marketing .logout-button {
-  position: fixed;
-  top: 20px;
-  right: 40px;
-  z-index: 1000;
-  background: none;
-  border: none;
-  color: #3498db;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.marketing .logout-button:hover {
-  background-color: #3498db;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.marketing .logout-button svg {
-  font-size: 16px;
-}
-
-/* Add these styles for Customer Data tab */
-.marketing .customer-data {
-  width: 100%;
-  height: calc(100vh - 300px);
-  overflow: hidden;
-}
-
-.marketing .customer-data .table-container {
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-}
-
-.marketing .customer-table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  table-layout: fixed;
-}
-
-/* Column widths for customer table */
-.marketing .customer-table th:nth-child(1),
-.marketing .customer-table td:nth-child(1) { width: 10%; } /* Order ID */
-
-.marketing .customer-table th:nth-child(2),
-.marketing .customer-table td:nth-child(2) { width: 15%; } /* Customer */
-
-.marketing .customer-table th:nth-child(3),
-.marketing .customer-table td:nth-child(3) { width: 10%; } /* Type */
-
-.marketing .customer-table th:nth-child(4),
-.marketing .customer-table td:nth-child(4) { width: 10%; } /* Quantity */
-
-.marketing .customer-table th:nth-child(5),
-.marketing .customer-table td:nth-child(5) { width: 12%; } /* Amount */
-
-.marketing .customer-table th:nth-child(6),
-.marketing .customer-table td:nth-child(6) { width: 15%; } /* Status */
-
-.marketing .customer-table th:nth-child(7),
-.marketing .customer-table td:nth-child(7) { width: 13%; } /* Date */
-
-.marketing .customer-table th:nth-child(8),
-.marketing .customer-table td:nth-child(8) { width: 15%; } /* Payment Status */
-
-/* Add custom scrollbar styles */
-.marketing .table-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.marketing .table-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.marketing .table-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.marketing .table-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* For Firefox */
-.marketing .table-container {
-  scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
-}
-
-/* Table header and cell styles for customer table */
-.marketing .customer-table th,
-.marketing .customer-table td {
-  padding: 12px 16px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.marketing .customer-table th {
-  background-color: #f8f9fa;
-  font-weight: 700;
-  color: #2c3e50;
-  text-transform: uppercase;
-  font-size: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.marketing .customer-table td {
-  background-color: white;
-}
-
-/* Status badge styles for customer table */
-.marketing .customer-table .status-badge {
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  display: inline-block;
-  color: white;
-}
-
-/* Status colors for different states */
-.marketing .customer-table .status-badge.pending {
-  background-color: #f39c12;
-}
-
-.marketing .customer-table .status-badge.accepted {
-  background-color: #3498db;
-}
-
-.marketing .customer-table .status-badge.completed {
-  background-color: #2ecc71;
-}
-
-.marketing .customer-table .status-badge.rejected {
-  background-color: #e74c3c;
-}
-
-.marketing .customer-table .status-badge.delivered {
-  background-color: #27ae60;
-}
-
-.marketing .customer-table .status-badge.out-for-delivery {
-  background-color: #f1c40f;
-}
-
-/* Payment status badges */
-.marketing .customer-table .payment-status {
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  display: inline-block;
-  color: white;
-}
-
-.marketing .customer-table .payment-status.paid {
-  background-color: #2ecc71;
-}
-
-.marketing .customer-table .payment-status.unpaid {
-  background-color: #e74c3c;
-}
-
-/* Add these styles to fix the scrolling issue */
-.marketing .tab-content {
-  height: calc(100vh - 250px);
-  overflow: hidden;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.marketing .table-container {
-  width: 100%;
-  height: calc(100% - 120px);
-  overflow-x: auto;
-  overflow-y: auto;
-  padding-bottom: 20px;
-}
-
-/* Custom scrollbar styles */
-.marketing .table-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.marketing .table-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.marketing .table-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.marketing .table-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* For Firefox */
-.marketing .table-container {
-  scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
-}
-
-/* Keep table header visible while scrolling */
-.marketing .order-table thead {
-  position: sticky;
-  top: 0;
-  background-color: #f8f9fa;
-  z-index: 10;
-}
-
-/* Ensure proper table layout */
-.marketing .order-table {
-  width: 100%;
-  min-width: 900px;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  table-layout: fixed;
-  margin-bottom: 20px;
-}
-
-/* Ensure proper spacing for the last row */
-.marketing .order-table tr:last-child td {
-  padding-bottom: 16px;
-}
-
-/* Add these styles for the new order button and modal */
-.marketing .action-bar {
-  display: flex;
-  justify-content: flex-start;
-  margin: 0 0 20px 0;
-  padding: 0;
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.marketing .add-order-btn {
-  background-color: #2ecc71;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-
-.marketing .add-order-btn:hover {
-  background-color: #27ae60;
-  transform: translateY(-1px);
-}
-
-/* Add responsive styles */
-@media (max-width: 768px) {
-  .marketing .new-order-modal {
-    padding: 20px;
-    width: 95%;
-  }
-
-  .marketing .action-bar {
-    padding: 0 10px;
-  }
-}
-
-/* Add these styles to ensure proper scrolling */
-.marketing .purchased-orders {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Update status text styling for customer data tab */
-.marketing .customer-table .status-text {
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.marketing .customer-table .status-text.pending {
-  color: #f39c12;
-}
-
-.marketing .customer-table .status-text.accepted {
-  color: #3498db;
-}
-
-.marketing .customer-table .status-text.completed {
-  color: #2ecc71;
-}
-
-.marketing .customer-table .status-text.rejected {
-  color: #e74c3c;
-}
-
-.marketing .customer-table .status-text.delivered {
-  color: #27ae60;
-}
-
-.marketing .customer-table .status-text.out-for-delivery {
-  color: #f1c40f;
-}
-
-/* Remove the old status badge styles for customer table only */
-.marketing .customer-table .status-badge {
-  display: none;
-}
-
-/* Keep the original status badge styles for other tables */
-.marketing .order-table .status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  display: inline-block;
-  color: white;
-}
-
+/* Tabs */
 .marketing .tabs-container {
   display: flex;
   justify-content: center;
@@ -666,18 +184,205 @@
   background-color: #e0e0e0;
 }
 
-/* Order details modal styles */
-.marketing .modal-content {
-  background-color: white;
-  border-radius: 12px;
-  padding: 30px;
-  position: relative;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
+/* New Order button */
+.marketing .add-order-btn {
+  background-color: #2ecc71;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  cursor: pointer;
 }
 
+/* Scrollbar styles */
+.marketing .table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.marketing .table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.marketing .table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.marketing .table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Modal styles */
+.marketing .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.marketing .modal-content {
+  background-color: white;
+  border-radius: 0;
+  padding: 0;
+  width: 400px;
+  max-width: 400px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Logout button */
+.marketing .logout-button {
+  position: fixed;
+  top: 20px;
+  right: 40px;
+  z-index: 1000;
+  background: none;
+  border: none;
+  color: #3498db;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.marketing .logout-button:hover {
+  background-color: #3498db;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Section titles */
+.marketing .section-title {
+  margin-bottom: 8px;
+}
+
+.marketing .section-description {
+  margin-bottom: 16px;
+}
+
+/* New Order Modal Styles */
+.marketing .new-order-modal {
+  padding: 20px;
+  position: relative;
+}
+
+/* X button styling */
+.marketing .close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marketing .close-modal:hover {
+  color: #333;
+}
+
+/* Modal Header - clean and simple */
+.marketing .new-order-modal h2 {
+  font-size: 16px;
+  color: #333;
+  font-weight: normal;
+  text-align: center;
+  margin: 0;
+  padding: 15px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Remove all close button styles */
+.marketing .new-order-modal .close-modal {
+  display: none;  /* Hide the close button completely */
+}
+
+/* Form content padding */
+.marketing .new-order-modal form {
+  padding: 20px;
+}
+
+/* Form Groups */
+.marketing .new-order-modal .form-group {
+  margin-bottom: 12px;
+}
+
+/* Labels */
+.marketing .new-order-modal label {
+  display: block;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* Inputs - adding subtle rounding */
+.marketing .new-order-modal input,
+.marketing .new-order-modal select,
+.marketing .new-order-modal textarea {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  margin: 0;
+}
+
+.marketing .new-order-modal textarea {
+  height: 80px;
+  resize: none;
+}
+
+/* Create Order Button */
+.marketing .new-order-modal .action-buttons-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.marketing .new-order-modal .submit-btn {
+  padding: 8px 16px;
+  background-color: #2ecc71;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.marketing .new-order-modal .submit-btn:hover {
+  background-color: #27ae60;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Order Details Modal */
 .marketing .order-details {
   margin-top: 20px;
 }
@@ -710,65 +415,7 @@
   font-size: 14px;
 }
 
-.marketing .order-details-table tr:last-child th,
-.marketing .order-details-table tr:last-child td {
-  border-bottom: none;
-}
-
-.marketing .modal-content h2 {
-  color: #2c3e50;
-  font-size: 24px;
-  margin-bottom: 20px;
-  padding-right: 30px;
-}
-
-.marketing .close-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #95a5a6;
-  cursor: pointer;
-  padding: 5px;
-  line-height: 1;
-}
-
-.marketing .close-btn:hover {
-  color: #7f8c8d;
-}
-
-/* Status badge in modal */
-.marketing .order-details-table .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  display: inline-block;
-}
-
-/* Scrollbar styling */
-.marketing .modal-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.marketing .modal-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.marketing .modal-content::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.marketing .modal-content::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Payment modal styles */
+/* Payment Modal */
 .marketing .payment-modal {
   background-color: white;
   padding: 24px;
@@ -834,23 +481,67 @@
   color: white;
 }
 
-.marketing .modal-buttons .cancel-btn:hover {
-  background-color: #c0392b;
+/* Customer Data Specific Styles */
+.marketing .customer-data {
+  width: 100%;
+  height: calc(100vh - 150px);
+  overflow: hidden;
 }
 
-.marketing .modal-buttons .confirm-btn:hover {
+.marketing .customer-data .table-container {
+  width: 100%;
+  height: calc(100% - 60px);
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.marketing .customer-table .status-badge {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+  color: white;
+}
+
+.marketing .customer-table .status-badge.pending {
+  background-color: #f39c12;
+}
+
+.marketing .customer-table .status-badge.accepted {
+  background-color: #3498db;
+}
+
+.marketing .customer-table .status-badge.completed {
+  background-color: #2ecc71;
+}
+
+.marketing .customer-table .status-badge.rejected {
+  background-color: #e74c3c;
+}
+
+.marketing .customer-table .status-badge.delivered {
   background-color: #27ae60;
 }
 
-/* Add focus styles for input */
-.marketing .payment-details input:focus {
+.marketing .customer-table .status-badge.out-for-delivery {
+  background-color: #f1c40f;
+}
+
+/* Focus styles */
+.marketing .payment-details input:focus,
+.marketing .new-order-modal input:focus,
+.marketing .new-order-modal select:focus,
+.marketing .new-order-modal textarea:focus {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-/* Adjust the modal title */
-.marketing .new-order-modal h2 {
+/* Modal title styles */
+.marketing .new-order-modal h2,
+.marketing .payment-modal h2 {
   font-size: 20px;
   text-align: center;
   margin-bottom: 20px;
@@ -858,26 +549,86 @@
   padding: 0 25px;
 }
 
-.marketing .tab-content {
-  height: calc(100vh - 250px);
-  overflow: hidden;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  margin-bottom: 20px;
+/* Add these styles for payment status in customer data */
+.marketing .customer-table .payment-status {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+  color: white;
 }
 
-.marketing .table-container {
-  width: 100%;
-  height: calc(100% - 80px);
-  overflow-x: auto;
-  overflow-y: auto;
-  margin-top: 0;
+.marketing .customer-table .payment-status.PAID,
+.marketing .customer-table .payment-status.paid {
+  background-color: #2ecc71; /* Green color for paid status */
 }
 
-/* Center the form content */
-.marketing .new-order-modal form {
-  width: 90%;
-  margin: 0 auto;
+.marketing .customer-table .payment-status.UNPAID,
+.marketing .customer-table .payment-status.unpaid {
+  background-color: #e74c3c; /* Red color for unpaid status */
+}
+
+.marketing .customer-table .payment-status.PARTIAL,
+.marketing .customer-table .payment-status.partial {
+  background-color: #f39c12; /* Orange color for partial payment */
+}
+
+.marketing .customer-table .payment-status.PENDING,
+.marketing .customer-table .payment-status.pending {
+  background-color: #3498db; /* Blue color for pending payment */
+}
+
+.marketing .customer-table .payment-status.REFUNDED,
+.marketing .customer-table .payment-status.refunded {
+  background-color: #95a5a6; /* Gray color for refunded status */
+}
+
+/* Error message styling if needed */
+.marketing .new-order-modal .error-message {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Required field indicator */
+.marketing .new-order-modal label.required::after {
+  content: '*';
+  color: #e74c3c;
+  margin-left: 4px;
+}
+
+/* Modal header area */
+.marketing .modal-header {
+  position: relative;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 15px 0;
+}
+
+.marketing .modal-header h2 {
+  text-align: center;
+  margin: 0;
+  font-weight: normal;
+  font-size: 16px;
+}
+
+/* X icon button styling - adjusted position */
+.marketing .close-button {
+  position: absolute;
+  right: -10px;  /* Adjust this value to match cursor position */
+  top: -10px;    /* Adjust this value to match cursor position */
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.marketing .close-button:hover {
+  color: #333;
 }
