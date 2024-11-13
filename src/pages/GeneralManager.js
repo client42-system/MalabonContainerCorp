@@ -362,15 +362,24 @@ function GeneralManager() {
                   <div className="action-buttons">
                     {order.status === 'PENDING_APPROVAL' ? (
                       <>
-                        <button onClick={() => acceptOrder(order.id, order.firestoreId)} className="accept-btn">
+                        <button 
+                          className="accept-btn"
+                          onClick={() => acceptOrder(order.id, order.firestoreId)}
+                        >
                           <FaCheck /> Accept
                         </button>
-                        <button onClick={() => handleRejectOrder(order.id, order.firestoreId)} className="reject-btn">
+                        <button 
+                          className="reject-btn"
+                          onClick={() => handleRejectOrder(order.id, order.firestoreId)}
+                        >
                           <FaTimes /> Reject
                         </button>
                       </>
                     ) : (
-                      <button onClick={() => setSelectedOrder(order)} className="view-btn">
+                      <button 
+                        className="view-btn"
+                        onClick={() => setSelectedOrder(order)}
+                      >
                         <FaEye /> View Details
                       </button>
                     )}

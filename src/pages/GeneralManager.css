@@ -1031,38 +1031,3 @@
   padding-right: 12px; /* Consistent padding for scrollbar */
   margin-right: -6px; /* Offset padding to maintain alignment */
 }
-
-/* Add status badge styles */
-.general-manager .status-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.general-manager .status-badge.pending_approval {
-  background-color: #fef3c7;
-  color: #d97706;
-}
-
-.general-manager .status-badge.pending {
-  background-color: #e0f2fe;
-  color: #0369a1;
-}
-
-.general-manager .status-badge.accepted {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.general-manager .status-badge.rejected {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-.general-manager .status-badge.completed {
-  background-color: #ddd6fe;
-  color: #7c3aed;
-}
