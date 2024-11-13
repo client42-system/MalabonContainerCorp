@@ -28,7 +28,7 @@ export default function PlantManagerDashboard() {
       const ordersRef = collection(db, 'orders');
       const q = query(
         ordersRef,
-        where('status', 'in', ['Pending', 'Accepted', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
+        where('status', 'in', ['ACCEPTED', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
         orderBy('date', 'desc')
       );
       
@@ -39,7 +39,7 @@ export default function PlantManagerDashboard() {
       }));
 
       // Filter orders based on status
-      const accepted = orders.filter(order => order.status === 'Pending');
+      const accepted = orders.filter(order => order.status === 'ACCEPTED');
       const completed = orders.filter(order => order.status === 'COMPLETED');
       const outForDelivery = orders.filter(order => order.status === 'OUT_FOR_DELIVERY');
 
@@ -116,11 +116,12 @@ export default function PlantManagerDashboard() {
       const orderRef = doc(db, 'orders', schedulingData.selectedOrder.firestoreId);
       await updateDoc(orderRef, {
         deliveryDate: schedulingData.deliveryDate,
-        status: 'Out for Delivery'
+        status: 'OUT_FOR_DELIVERY',
+        updatedAt: new Date().toISOString()
       });
 
       setIsSchedulingModalOpen(false);
-      fetchOrders(); // Replace the two function calls with just fetchOrders
+      fetchOrders();
     } catch (error) {
       console.error('Error scheduling delivery:', error);
     }
