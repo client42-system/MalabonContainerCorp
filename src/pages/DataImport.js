@@ -120,6 +120,7 @@ export default function DataImport() {
           <p className="import-description">
             Upload your Excel file containing historical order data. 
             The file should include: Order ID, Customer, Type, Quantity, Address, Contact Number, Date, and Status.
+            temporary lang to :).
           </p>
 
           <div className="import-controls">

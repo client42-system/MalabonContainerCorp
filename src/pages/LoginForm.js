@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, Lock, Tag, Factory, Calculator, ClipboardList, User, Crown, X } from 'lucide-react';
+import { Briefcase, Lock, Tag, Factory, Calculator, ClipboardList, User, Crown, X, Eye, EyeOff } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase Auth method
 import { auth } from '../firebaseConfig'; // Import the configured Firebase instance
@@ -13,6 +13,7 @@ function LoginForm() {
   const [error, setError] = useState(''); // For handling authentication errors
   const { position } = useParams();
   const navigate = useNavigate(); // Initialize the navigate function
+  const [showPassword, setShowPassword] = useState(false);
 
   // Define icons for each job position
   const icons = {
@@ -123,14 +124,23 @@ function LoginForm() {
           </div>
           <div>
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="border border-gray-300 p-2 rounded-md w-full mb-4"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="border border-gray-300 p-2 rounded-md w-full mb-4"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[40%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
           <div className="flex justify-end mb-4">
             <button

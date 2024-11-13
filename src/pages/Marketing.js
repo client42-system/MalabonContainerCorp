@@ -30,7 +30,6 @@ function MarketingDashboard() {
   const [monthlyOrders, setMonthlyOrders] = useState([]);
   const [paymentStatus, setPaymentStatus] = useState('');
   const [totalAmount, setTotalAmount] = useState(0);
-  const [paymentModal, setPaymentModal] = useState({ isOpen: false, order: null, amountPaid: '' });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -193,60 +192,6 @@ function MarketingDashboard() {
       if (error.message) {
         console.error('Error message:', error.message);
       }
-    }
-  };
-
-  const handlePayment = async (orderId) => {
-    try {
-      const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, {
-        paymentStatus: 'Paid'
-      });
-      fetchPurchasedOrders();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
-  };
-
-  const handlePaymentClick = async (order) => {
-    try {
-      if (!order.firestoreId) {
-        console.error('Order Firestore ID is missing');
-        return;
-      }
-
-      const orderRef = doc(db, 'orders', order.firestoreId);
-      await updateDoc(orderRef, {
-        paymentStatus: 'PAID',
-        paymentDate: new Date().toISOString()
-      });
-
-      // Refresh orders after updating
-      fetchPurchasedOrders();
-      
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-    }
-  };
-
-  const handlePaymentSubmit = async () => {
-    if (!paymentModal.order || !paymentModal.amountPaid) return;
-
-    try {
-      const orderRef = doc(db, 'orders', paymentModal.order.firestoreId);
-      const amountPaid = parseFloat(paymentModal.amountPaid);
-      
-      await updateDoc(orderRef, {
-        paymentStatus: 'Paid',
-        amountPaid: amountPaid,
-        amount: amountPaid, // Add this line to update the amount
-        paymentDate: new Date().toISOString()
-      });
-
-      setPaymentModal({ isOpen: false, order: null, amountPaid: '' });
-      fetchPurchasedOrders();
-    } catch (error) {
-      console.error('Error updating payment status:', error);
     }
   };
 
@@ -439,49 +384,6 @@ function MarketingDashboard() {
     );
   };
 
-  const renderPaymentModal = () => {
-    if (!paymentModal.isOpen) return null;
-    
-    return (
-      <div className="modal-overlay" onClick={() => setPaymentModal({ isOpen: false, order: null, amountPaid: '' })}>
-        <div className="modal-content payment-modal" onClick={(e) => e.stopPropagation()}>
-          <h2>Enter Payment Details</h2>
-          <div className="payment-details">
-            <p><strong>Order ID:</strong> {paymentModal.order.id}</p>
-            <p><strong>Customer:</strong> {paymentModal.order.customer}</p>
-            <div className="form-group">
-              <label htmlFor="amountPaid">Payment Amount (₱):</label>
-              <input
-                type="number"
-                id="amountPaid"
-                value={paymentModal.amountPaid}
-                onChange={(e) => setPaymentModal({ ...paymentModal, amountPaid: e.target.value })}
-                placeholder="Enter amount"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-          </div>
-          <div className="modal-buttons">
-            <button 
-              className="cancel-btn" 
-              onClick={() => setPaymentModal({ isOpen: false, order: null, amountPaid: '' })}
-            >
-              Cancel
-            </button>
-            <button 
-              className="confirm-btn" 
-              onClick={handlePaymentSubmit}
-            >
-              Confirm Payment
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderPurchasedOrders = () => (
     <>
       <div className="action-bar">
@@ -510,7 +412,7 @@ function MarketingDashboard() {
                 <td>{order.customer}</td>
                 <td>{order.type}</td>
                 <td>{order.quantity}</td>
-                <td>{order.amount ? order.amount.toFixed(2) : 'N/A'}</td>
+                <td>₱{order.amount ? order.amount.toFixed(2) : 'N/A'}</td>
                 <td>
                   <span className={`status-badge ${order.paymentStatus?.toLowerCase() || 'unpaid'}`}>
                     {order.paymentStatus || 'UNPAID'}
@@ -522,18 +424,6 @@ function MarketingDashboard() {
                     <button className="view-btn" onClick={() => handleViewDetails(order)}>
                       View
                     </button>
-                    {order.paymentStatus !== 'Paid' && (
-                      <button 
-                        className="pay-btn"
-                        onClick={() => setPaymentModal({ 
-                          isOpen: true, 
-                          order: order, 
-                          amountPaid: ''
-                        })}
-                      >
-                        <FaMoneyBillWave /> Pay
-                      </button>
-                    )}
                   </div>
                 </td>
               </tr>
@@ -663,8 +553,6 @@ function MarketingDashboard() {
             </div>
           </div>
         )}
-
-        {renderPaymentModal()}
       </div>
     </div>
   );

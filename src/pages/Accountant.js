@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import '../pages/Accountant.css'
-import { FaSignOutAlt, FaExchangeAlt, FaFileInvoiceDollar, FaExclamationTriangle, FaTimes, FaEye } from 'react-icons/fa'
+import { FaSignOutAlt, FaExchangeAlt, FaFileInvoiceDollar, FaExclamationTriangle, FaTimes, FaEye, FaMoneyBillWave } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebaseConfig'
-import { collection, getDocs, query, where, addDoc } from 'firebase/firestore'
+import { collection, getDocs, query, where, addDoc, updateDoc, doc } from 'firebase/firestore'
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 
@@ -15,6 +15,8 @@ export default function AccountantDashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [showWarningModal, setShowWarningModal] = useState(false)
+  const [paymentModal, setPaymentModal] = useState({ isOpen: false, order: null, amountPaid: '' });
+  const [confirmPayment, setConfirmPayment] = useState({ show: false, order: null });
 
   const navigate = useNavigate()
 
@@ -33,7 +35,8 @@ export default function AccountantDashboard() {
       const querySnapshot = await getDocs(q);
       const fetchedOrders = querySnapshot.docs
         .map(doc => ({
-          id: doc.id,
+          id: doc.data().id,
+          firestoreId: doc.id,
           ...doc.data(),
           paymentStatus: doc.data().paymentStatus || 'Unpaid'
         }))
@@ -190,17 +193,23 @@ export default function AccountantDashboard() {
     doc.text("This is a computer-generated receipt.", doc.internal.pageSize.width / 2, finalY + 15, { align: "center" });
     doc.text("Thank you for your business!", doc.internal.pageSize.width / 2, finalY + 20, { align: "center" });
 
-    // Instead of saving to storage, download the PDF directly
     try {
-      // Generate filename with date
-      const date = new Date().toLocaleDateString().replace(/\//g, '_');
-      const filename = `payment_report_${date}.pdf`;
+      // Instead of downloading, save to Firestore
+      const pdfOutput = doc.output('dataurlstring');
       
-      // Save PDF directly to downloads
-      doc.save(filename);
+      // Create a new payment report document
+      const paymentReportRef = collection(db, 'paymentReports');
+      await addDoc(paymentReportRef, {
+        date: new Date().toISOString(),
+        totalAmount: selectedOrder.amount,
+        orderCount: 1,
+        report: pdfOutput,
+        orderId: selectedOrder.id,
+        customerName: selectedOrder.customer
+      });
       
       setError(null);
-      alert('Receipt generated successfully!');
+      alert('Receipt generated and sent to Office Secretary successfully!');
       setIsReportModalOpen(false);
     } catch (error) {
       console.error('Error generating report:', error);
@@ -214,45 +223,71 @@ export default function AccountantDashboard() {
     (filterStatus === 'all' || order.paymentStatus === filterStatus)
   )
 
+  const handlePayment = async (order) => {
+    try {
+      // Check if firestoreId exists
+      if (!order.firestoreId) {
+        setError('Error: Could not find document ID');
+        return;
+      }
+
+      const orderRef = doc(db, 'orders', order.firestoreId);
+      
+      await updateDoc(orderRef, {
+        paymentStatus: 'PAID',
+        paymentDate: new Date().toISOString()
+      });
+
+      setConfirmPayment({ show: false, order: null });
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      setError('Failed to process payment: ' + error.message);
+    }
+  };
+
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setIsReportModalOpen(true);
+  };
+
   const renderOrderDetails = () => {
     if (!selectedOrder) return null;
     return (
       <div className="modal-overlay">
         <div className="modal-content">
-          <h2>Order Details</h2>
-          <button className="close-modal" onClick={() => setIsReportModalOpen(false)}>
-            <FaTimes />
-          </button>
-          <table className="order-details-table">
-            <tbody>
-              <tr>
-                <th>Order ID:</th>
-                <td>{selectedOrder.id}</td>
-              </tr>
-              <tr>
-                <th>Customer:</th>
-                <td>{selectedOrder.customer}</td>
-              </tr>
-              <tr>
-                <th>Quantity:</th>
-                <td>{selectedOrder.quantity}</td>
-              </tr>
-              <tr>
-                <th>Amount:</th>
-                <td>₱{selectedOrder.amount ? selectedOrder.amount.toFixed(2) : 'N/A'}</td>
-              </tr>
-              <tr>
-                <th>Payment Status:</th>
-                <td>{selectedOrder.paymentStatus}</td>
-              </tr>
-              <tr>
-                <th>Date:</th>
-                <td>{new Date(selectedOrder.date).toLocaleDateString()}</td>
-              </tr>
-            </tbody>
-          </table>
-          <button className="generate-report-btn full-width" onClick={generateReport}>
-            <FaFileInvoiceDollar /> Generate Report
+          <div className="modal-header">
+            <h2>Order Details</h2>
+            <button 
+              className="close-modal" 
+              onClick={() => {
+                setSelectedOrder(null);
+                setIsReportModalOpen(false);
+              }}
+            >
+              <FaTimes />
+            </button>
+          </div>
+          <div className="order-details">
+            <div className="details-row">
+              <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+              <p><strong>Customer:</strong> {selectedOrder.customer}</p>
+            </div>
+            <div className="details-row">
+              <p><strong>Quantity:</strong> {selectedOrder.quantity}</p>
+              <p><strong>Amount:</strong> ₱{selectedOrder.amount?.toFixed(2) || 'N/A'}</p>
+            </div>
+            <div className="details-row">
+              <p><strong>Payment Status:</strong> 
+                <span className={`status-badge ${selectedOrder.paymentStatus?.toLowerCase()}`}>
+                  {selectedOrder.paymentStatus}
+                </span>
+              </p>
+              <p><strong>Date:</strong> {new Date(selectedOrder.date).toLocaleDateString()}</p>
+            </div>
+          </div>
+          <button className="generate-report-btn" onClick={generateReport}>
+            <FaFileInvoiceDollar /> Generate & Send Report
           </button>
         </div>
       </div>
@@ -271,6 +306,37 @@ export default function AccountantDashboard() {
               onClick={() => setShowWarningModal(false)}
             >
               Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderConfirmPayment = () => {
+    if (!confirmPayment.show) return null;
+    
+    return (
+      <div className="modal-overlay">
+        <div className="confirm-payment-modal">
+          <h2>Confirm Payment</h2>
+          <div className="payment-details">
+            <p><strong>Order ID:</strong> {confirmPayment.order.id}</p>
+            <p><strong>Customer:</strong> {confirmPayment.order.customer}</p>
+            <p><strong>Amount:</strong> ₱{confirmPayment.order.amount?.toFixed(2) || 'N/A'}</p>
+          </div>
+          <div className="confirm-buttons">
+            <button 
+              className="cancel-btn"
+              onClick={() => setConfirmPayment({ show: false, order: null })}
+            >
+              Cancel
+            </button>
+            <button 
+              className="confirm-btn"
+              onClick={() => handlePayment(confirmPayment.order)}
+            >
+              Confirm Payment
             </button>
           </div>
         </div>
@@ -346,15 +412,19 @@ export default function AccountantDashboard() {
                   </td>
                   <td>{new Date(order.date).toLocaleDateString()}</td>
                   <td>
-                    <button 
-                      className="view-details-btn" 
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setIsReportModalOpen(true);
-                      }}
-                    >
-                      <FaEye /> View Details
-                    </button>
+                    <div className="action-buttons-container">
+                      <button className="view-details-btn" onClick={() => handleViewDetails(order)}>
+                        <FaEye /> View
+                      </button>
+                      {order.paymentStatus !== 'PAID' && (
+                        <button 
+                          className="pay-btn"
+                          onClick={() => setConfirmPayment({ show: true, order: order })}
+                        >
+                          <FaMoneyBillWave /> Pay
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -364,6 +434,7 @@ export default function AccountantDashboard() {
 
         {isReportModalOpen && renderOrderDetails()}
         {showWarningModal && renderWarningModal()}
+        {confirmPayment.show && renderConfirmPayment()}
       </div>
     </div>
   )
