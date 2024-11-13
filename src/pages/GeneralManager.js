@@ -68,7 +68,8 @@ function GeneralManager() {
     const ordersRef = collection(db, 'orders');
     const q = query(
       ordersRef,
-      where('status', '!=', 'REJECTED')
+      where('status', 'in', ['PENDING_APPROVAL', 'Pending', 'Accepted', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
+      orderBy('date', 'desc')
     );
     
     return onSnapshot(q, (querySnapshot) => {
@@ -287,31 +288,26 @@ function GeneralManager() {
   const acceptOrder = async (orderId, firestoreId) => {
     try {
       const orderRef = doc(db, 'orders', firestoreId);
-      await updateDoc(orderRef, { status: 'Accepted' });
-      console.log('Order accepted successfully');
+      await updateDoc(orderRef, { 
+        status: 'Pending',
+        approvedAt: new Date().toISOString(),
+        approvedBy: auth.currentUser.uid
+      });
+      console.log('Order approved successfully');
     } catch (error) {
-      console.error('Error accepting order:', error);
+      console.error('Error approving order:', error);
     }
   };
 
-  const rejectOrder = async (orderId, firestoreId) => {
+  const handleRejectOrder = async (orderId, firestoreId) => {
     try {
       // Update the order status to REJECTED
       const orderRef = doc(db, 'orders', firestoreId);
       await updateDoc(orderRef, {
         status: 'REJECTED',
-        rejectedAt: new Date().toISOString(), // Add rejection timestamp
-        rejectedBy: 'General Manager'  // Add who rejected it
+        rejectedAt: new Date().toISOString(),
+        rejectedBy: auth.currentUser.uid
       });
-
-      // Update the local state
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order.firestoreId === firestoreId 
-            ? { ...order, status: 'REJECTED' } 
-            : order
-        )
-      );
 
       // Show success message
       alert('Order rejected successfully');
@@ -328,31 +324,6 @@ function GeneralManager() {
       fetchMaintenanceTasks();
     } catch (error) {
       console.error('Error completing maintenance task:', error);
-    }
-  };
-
-  const handleRejectOrder = async (order) => {
-    try {
-      // First, add to archives collection
-      const archiveRef = collection(db, 'archives');
-      await addDoc(archiveRef, {
-        ...order,
-        archivedDate: new Date().toISOString(),
-        reason: 'REJECTED',
-        archivedBy: 'General Manager'
-      });
-
-      // Then update the order status
-      const orderRef = doc(db, 'orders', order.firestoreId);
-      await updateDoc(orderRef, {
-        status: 'REJECTED',
-        rejectedDate: new Date().toISOString()
-      });
-
-      // Refresh the orders list
-      fetchOrders();
-    } catch (error) {
-      console.error('Error rejecting order:', error);
     }
   };
 
@@ -382,15 +353,19 @@ function GeneralManager() {
                 <td>{order.quantity}</td>
                 <td>₱{order.amount ? order.amount.toFixed(2) : 'N/A'}</td>
                 <td>{new Date(order.date).toLocaleDateString()}</td>
-                <td>{order.status}</td>
+                <td>
+                  <span className={`status-badge ${order.status?.toLowerCase()}`}>
+                    {order.status}
+                  </span>
+                </td>
                 <td>
                   <div className="action-buttons">
-                    {order.status === 'Pending' ? (
+                    {order.status === 'PENDING_APPROVAL' ? (
                       <>
                         <button onClick={() => acceptOrder(order.id, order.firestoreId)} className="accept-btn">
                           <FaCheck /> Accept
                         </button>
-                        <button onClick={() => rejectOrder(order.id, order.firestoreId)} className="reject-btn">
+                        <button onClick={() => handleRejectOrder(order.id, order.firestoreId)} className="reject-btn">
                           <FaTimes /> Reject
                         </button>
                       </>
@@ -405,6 +380,62 @@ function GeneralManager() {
             ))}
           </tbody>
         </table>
+      </div>
+      {selectedOrder && renderOrderDetails()}
+    </div>
+  );
+
+  const renderOrderDetails = () => (
+    <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <h2>Order Details</h2>
+        <button onClick={() => setSelectedOrder(null)} className="close-btn">&times;</button>
+        <div className="order-details">
+          <table className="order-details-table">
+            <tbody>
+              <tr>
+                <th>ORDER ID:</th>
+                <td>{selectedOrder.id}</td>
+              </tr>
+              <tr>
+                <th>CUSTOMER:</th>
+                <td>{selectedOrder.customer}</td>
+              </tr>
+              <tr>
+                <th>TYPE:</th>
+                <td>{selectedOrder.type}</td>
+              </tr>
+              <tr>
+                <th>QUANTITY:</th>
+                <td>{selectedOrder.quantity}</td>
+              </tr>
+              <tr>
+                <th>AMOUNT:</th>
+                <td>₱{selectedOrder.amount ? selectedOrder.amount.toFixed(2) : 'N/A'}</td>
+              </tr>
+              <tr>
+                <th>STATUS:</th>
+                <td>{selectedOrder.status}</td>
+              </tr>
+              <tr>
+                <th>DATE:</th>
+                <td>{new Date(selectedOrder.date).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <th>ADDRESS:</th>
+                <td>{selectedOrder.address || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th>CONTACT NUMBER:</th>
+                <td>{selectedOrder.contactNumber || 'N/A'}</td>
+              </tr>
+              <tr>
+                <th>NOTES:</th>
+                <td>{selectedOrder.notes || 'N/A'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -493,64 +524,6 @@ function GeneralManager() {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderOrderDetails = () => {
-    if (!selectedOrder) return null;
-    return (
-      <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          <h2>Order Details</h2>
-          <button onClick={() => setSelectedOrder(null)} className="close-btn">&times;</button>
-          <div className="order-details">
-            <table className="order-details-table">
-              <tbody>
-                <tr>
-                  <th>ORDER ID:</th>
-                  <td>{selectedOrder.id}</td>
-                </tr>
-                <tr>
-                  <th>CUSTOMER:</th>
-                  <td>{selectedOrder.customer}</td>
-                </tr>
-                <tr>
-                  <th>TYPE:</th>
-                  <td>{selectedOrder.type}</td>
-                </tr>
-                <tr>
-                  <th>QUANTITY:</th>
-                  <td>{selectedOrder.quantity}</td>
-                </tr>
-                <tr>
-                  <th>AMOUNT:</th>
-                  <td>₱{selectedOrder.amount ? selectedOrder.amount.toFixed(2) : 'N/A'}</td>
-                </tr>
-                <tr>
-                  <th>STATUS:</th>
-                  <td>{selectedOrder.status}</td>
-                </tr>
-                <tr>
-                  <th>DATE:</th>
-                  <td>{new Date(selectedOrder.date).toLocaleString()}</td>
-                </tr>
-                <tr>
-                  <th>ADDRESS:</th>
-                  <td>{selectedOrder.address}</td>
-                </tr>
-                <tr>
-                  <th>CONTACT NUMBER:</th>
-                  <td>{selectedOrder.contactNumber}</td>
-                </tr>
-                <tr>
-                  <th>NOTES:</th>
-                  <td>{selectedOrder.notes || 'N/A'}</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       </div>

@@ -145,7 +145,6 @@ function MarketingDashboard() {
       } else {
         const counterData = counterSnap.data();
         if (counterData.year !== currentYear) {
-          // Reset the counter for the new year
           newOrderNumber = 1;
           await setDoc(counterRef, { value: 1, year: currentYear });
         } else {
@@ -156,7 +155,7 @@ function MarketingDashboard() {
 
       const orderID = `${currentYear}-${newOrderNumber.toString().padStart(4, '0')}`;
 
-      // Create the new order document
+      // Create the new order document with PENDING_APPROVAL status
       const orderRef = doc(collection(db, 'orders'));
       const amount = await calculateOrderAmount(newOrder.type, parseInt(newOrder.quantity));
       await setDoc(orderRef, {
@@ -168,7 +167,7 @@ function MarketingDashboard() {
         contactNumber: newOrder.contactNumber,
         notes: newOrder.notes,
         date: new Date().toISOString(),
-        status: 'Pending',
+        status: 'PENDING_APPROVAL',
         paymentStatus: 'Unpaid',
         amount: amount
       });
@@ -319,33 +318,45 @@ function MarketingDashboard() {
     return (
       <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          <button className="close-btn" onClick={() => setSelectedOrder(null)}>&times;</button>
-          <h2>Order Details</h2>
+          <div className="modal-header">
+            <h2>Order Details</h2>
+            <button className="close-button" onClick={() => setSelectedOrder(null)}>
+              <FaTimes />
+            </button>
+          </div>
           <div className="order-details">
             <table className="order-details-table">
               <tbody>
                 <tr>
-                  <th>Order ID</th>
+                  <th>ORDER ID:</th>
                   <td>{selectedOrder.id}</td>
                 </tr>
                 <tr>
-                  <th>Customer</th>
+                  <th>CUSTOMER:</th>
                   <td>{selectedOrder.customer}</td>
                 </tr>
                 <tr>
-                  <th>Type</th>
+                  <th>TYPE:</th>
                   <td>{selectedOrder.type}</td>
                 </tr>
                 <tr>
-                  <th>Quantity</th>
+                  <th>QUANTITY:</th>
                   <td>{selectedOrder.quantity}</td>
                 </tr>
                 <tr>
-                  <th>Amount</th>
-                  <td>{selectedOrder.amount !== 'N/A' ? `₱${Number(selectedOrder.amount).toFixed(2)}` : 'N/A'}</td>
+                  <th>AMOUNT:</th>
+                  <td>₱{selectedOrder.amount ? selectedOrder.amount.toFixed(2) : 'N/A'}</td>
                 </tr>
                 <tr>
-                  <th>Payment Status</th>
+                  <th>STATUS:</th>
+                  <td>
+                    <span className={`status-badge ${selectedOrder.status?.toLowerCase()}`}>
+                      {selectedOrder.status}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>PAYMENT STATUS:</th>
                   <td>
                     <span className={`status-badge ${selectedOrder.paymentStatus?.toLowerCase()}`}>
                       {selectedOrder.paymentStatus}
@@ -353,27 +364,19 @@ function MarketingDashboard() {
                   </td>
                 </tr>
                 <tr>
-                  <th>Order Date</th>
+                  <th>DATE:</th>
                   <td>{new Date(selectedOrder.date).toLocaleString()}</td>
                 </tr>
                 <tr>
-                  <th>Payment Date</th>
-                  <td>{selectedOrder.paymentDate}</td>
-                </tr>
-                <tr>
-                  <th>Delivery Date</th>
-                  <td>{selectedOrder.deliveredDate}</td>
-                </tr>
-                <tr>
-                  <th>Address</th>
+                  <th>ADDRESS:</th>
                   <td>{selectedOrder.address || 'N/A'}</td>
                 </tr>
                 <tr>
-                  <th>Contact Number</th>
+                  <th>CONTACT NUMBER:</th>
                   <td>{selectedOrder.contactNumber || 'N/A'}</td>
                 </tr>
                 <tr>
-                  <th>Notes</th>
+                  <th>NOTES:</th>
                   <td>{selectedOrder.notes || 'N/A'}</td>
                 </tr>
               </tbody>
@@ -401,6 +404,7 @@ function MarketingDashboard() {
               <th>QUANTITY</th>
               <th>AMOUNT</th>
               <th>PAYMENT STATUS</th>
+              <th>STATUS</th>
               <th>DATE</th>
               <th>ACTION</th>
             </tr>
@@ -418,11 +422,16 @@ function MarketingDashboard() {
                     {order.paymentStatus || 'UNPAID'}
                   </span>
                 </td>
+                <td>
+                  <span className={`status-badge ${order.status?.toLowerCase()}`}>
+                    {order.status}
+                  </span>
+                </td>
                 <td>{new Date(order.date).toLocaleDateString()}</td>
                 <td>
                   <div className="action-buttons-container">
                     <button className="view-btn" onClick={() => handleViewDetails(order)}>
-                      View
+                      <FaEye /> View
                     </button>
                   </div>
                 </td>

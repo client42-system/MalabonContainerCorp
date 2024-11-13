@@ -28,6 +28,7 @@ export default function PlantManagerDashboard() {
       const ordersRef = collection(db, 'orders');
       const q = query(
         ordersRef,
+        where('status', 'in', ['Pending', 'Accepted', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
         orderBy('date', 'desc')
       );
       
@@ -38,9 +39,9 @@ export default function PlantManagerDashboard() {
       }));
 
       // Filter orders based on status
-      const accepted = orders.filter(order => order.status === 'ACCEPTED' || order.status === 'Accepted');
-      const completed = orders.filter(order => order.status === 'COMPLETED' || order.status === 'Completed');
-      const outForDelivery = orders.filter(order => order.status === 'OUT_FOR_DELIVERY' || order.status === 'Out for Delivery');
+      const accepted = orders.filter(order => order.status === 'Pending');
+      const completed = orders.filter(order => order.status === 'COMPLETED');
+      const outForDelivery = orders.filter(order => order.status === 'OUT_FOR_DELIVERY');
 
       setAcceptedOrders(accepted);
       setCompletedOrders(completed);

@@ -3,7 +3,7 @@ import '../pages/Accountant.css'
 import { FaSignOutAlt, FaExchangeAlt, FaFileInvoiceDollar, FaExclamationTriangle, FaTimes, FaEye, FaMoneyBillWave } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebaseConfig'
-import { collection, getDocs, query, where, addDoc, updateDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, query, where, addDoc, updateDoc, doc, orderBy } from 'firebase/firestore'
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 
@@ -29,24 +29,20 @@ export default function AccountantDashboard() {
       const ordersRef = collection(db, 'orders');
       const q = query(
         ordersRef,
-        where('status', '!=', 'REJECTED')
+        where('status', 'in', ['Pending', 'Accepted', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
+        orderBy('date', 'desc')
       );
       
       const querySnapshot = await getDocs(q);
-      const fetchedOrders = querySnapshot.docs
-        .map(doc => ({
-          id: doc.data().id,
-          firestoreId: doc.id,
-          ...doc.data(),
-          paymentStatus: doc.data().paymentStatus || 'Unpaid'
-        }))
-        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      const fetchedOrders = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        firestoreId: doc.id
+      }));
       
       setOrders(fetchedOrders);
-      setError(null);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      setError(`Failed to load orders. Error: ${error.message}`);
+      setError('Failed to load orders');
     }
   };
 
