@@ -255,10 +255,13 @@ export default function CEO() {
     try {
       const maintenanceRef = collection(db, 'maintenanceTasks');
       const querySnapshot = await getDocs(maintenanceRef);
-      const tasks = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      }));
+      const tasks = querySnapshot.docs
+        .map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          date: new Date(doc.data().date || doc.data().dueDate)
+        }))
+        .filter(task => task.date.getFullYear() === selectedYear);
 
       const issuesByPriority = { high: 0, medium: 0, low: 0 };
       const monthlyTasks = {
@@ -268,9 +271,11 @@ export default function CEO() {
 
       tasks.forEach(task => {
         const priority = task.priority?.toLowerCase() || 'medium';
-        issuesByPriority[priority]++;
+        if (issuesByPriority.hasOwnProperty(priority)) {
+          issuesByPriority[priority]++;
+        }
 
-        const month = new Date(task.date || task.dueDate).getMonth();
+        const month = task.date.getMonth();
         if (task.status?.toLowerCase() === 'completed') {
           monthlyTasks.completed[month]++;
         } else {
@@ -279,7 +284,11 @@ export default function CEO() {
       });
 
       setMaintenanceData({
-        issuesByPriority: Object.values(issuesByPriority),
+        issuesByPriority: [
+          issuesByPriority.high,
+          issuesByPriority.medium,
+          issuesByPriority.low
+        ],
         monthlyTasks
       });
     } catch (error) {
@@ -295,7 +304,8 @@ export default function CEO() {
         await Promise.all([
           fetchPredictiveAnalytics(),
           fetchSalesData(),
-          fetchProductionData()
+          fetchProductionData(),
+          fetchMaintenanceData()
         ]);
       } catch (error) {
         console.error('Error fetching data:', error);
