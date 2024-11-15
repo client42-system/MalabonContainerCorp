@@ -29,15 +29,18 @@ export default function AccountantDashboard() {
       const ordersRef = collection(db, 'orders');
       const q = query(
         ordersRef,
-        where('status', 'in', ['Pending', 'Accepted', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
         orderBy('date', 'desc')
       );
       
       const querySnapshot = await getDocs(q);
-      const fetchedOrders = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        firestoreId: doc.id
-      }));
+      const fetchedOrders = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          firestoreId: doc.id,
+          paymentStatus: data.paymentStatus || 'UNPAID'
+        };
+      });
       
       setOrders(fetchedOrders);
     } catch (error) {
@@ -213,11 +216,17 @@ export default function AccountantDashboard() {
     }
   };
 
-  const filteredOrders = orders.filter(order => 
-    (order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     order.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (filterStatus === 'all' || order.paymentStatus === filterStatus)
-  )
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      (order.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.id?.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    const matchesStatus = 
+      filterStatus === 'all' || 
+      order.paymentStatus?.toUpperCase() === filterStatus;
+      
+    return matchesSearch && (filterStatus === 'all' || matchesStatus);
+  });
 
   const handlePayment = async (order) => {
     try {
@@ -370,8 +379,8 @@ export default function AccountantDashboard() {
             className="filter-select"
           >
             <option value="all">All Statuses</option>
-            <option value="Unpaid">Unpaid</option>
-            <option value="Paid">Paid</option>
+            <option value="UNPAID">Unpaid</option>
+            <option value="PAID">Paid</option>
           </select>
         </div>
 
@@ -396,7 +405,7 @@ export default function AccountantDashboard() {
             </thead>
             <tbody>
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="clickable-row">
+                <tr key={order.firestoreId || order.id} className="clickable-row">
                   <td>{order.id}</td>
                   <td>{order.customer}</td>
                   <td>{order.quantity}</td>
@@ -409,7 +418,10 @@ export default function AccountantDashboard() {
                   <td>{new Date(order.date).toLocaleDateString()}</td>
                   <td>
                     <div className="action-buttons-container">
-                      <button className="view-details-btn" onClick={() => handleViewDetails(order)}>
+                      <button 
+                        className="view-btn" 
+                        onClick={() => handleViewDetails(order)}
+                      >
                         <FaEye /> View
                       </button>
                       {order.paymentStatus !== 'PAID' && (

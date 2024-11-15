@@ -34,6 +34,13 @@ ChartJS.register(
 );
 
 export default function CEO() {
+  // Add this constant right after the component declaration
+  const PRICES = {
+    'Plain': 117,
+    'Lithograph': 315,
+    'Class C': 115
+  };
+
   // State declarations
   const [activeTab, setActiveTab] = useState('predictions');
   const [isLoading, setIsLoading] = useState(true);
@@ -78,6 +85,7 @@ export default function CEO() {
       avgMonthlyVolume: 0
     }
   });
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const navigate = useNavigate();
 
@@ -85,18 +93,73 @@ export default function CEO() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif",
+            weight: '500'
+          }
+        }
       },
       tooltip: {
-        mode: 'index',
-        intersect: false,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#1e293b',
+        bodyColor: '#475569',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y}`;
+          }
+        }
       }
     },
     scales: {
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(226, 232, 240, 0.6)',
+          drawBorder: false
+        },
+        border: {
+          display: false
+        },
+        ticks: {
+          padding: 10,
+          color: '#64748b',
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif"
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        border: {
+          display: false
+        },
+        ticks: {
+          padding: 10,
+          color: '#64748b',
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif"
+          }
+        }
       }
     }
   };
@@ -105,10 +168,13 @@ export default function CEO() {
     try {
       const ordersRef = collection(db, 'orders');
       const querySnapshot = await getDocs(ordersRef);
-      const orders = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      }));
+      const orders = querySnapshot.docs
+        .map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          date: new Date(doc.data().date)
+        }))
+        .filter(order => order.date.getFullYear() === selectedYear);
 
       // Process sales data
       const monthlyRevenue = Array(12).fill(0);
@@ -137,10 +203,13 @@ export default function CEO() {
     try {
       const ordersRef = collection(db, 'orders');
       const ordersSnapshot = await getDocs(ordersRef);
-      const orders = ordersSnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id
-      }));
+      const orders = ordersSnapshot.docs
+        .map(doc => ({
+          ...doc.data(),
+          id: doc.id,
+          date: new Date(doc.data().date)
+        }))
+        .filter(order => order.date.getFullYear() === selectedYear);
 
       const maintenanceRef = collection(db, 'maintenanceTasks');
       const maintenanceSnapshot = await getDocs(maintenanceRef);
@@ -226,8 +295,7 @@ export default function CEO() {
         await Promise.all([
           fetchPredictiveAnalytics(),
           fetchSalesData(),
-          fetchProductionData(),
-          fetchMaintenanceData()
+          fetchProductionData()
         ]);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -238,7 +306,7 @@ export default function CEO() {
     };
 
     fetchAllData();
-  }, []);
+  }, [selectedYear]);
 
   const handleLogout = async () => {
     try {
@@ -256,31 +324,26 @@ export default function CEO() {
 
       const ordersRef = collection(db, 'orders');
       const querySnapshot = await getDocs(ordersRef);
-      
-      const PRICES = {
-        'Plain': 117,
-        'Lithograph': 315,
-        'Class C': 115
-      };
+      const orders = querySnapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          const type = data.type || 'Plain';
+          const price = PRICES[type] || PRICES['Plain'];
+          const quantity = Number(data.quantity) || 0;
+          const calculatedAmount = quantity * price;
 
-      const orders = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        // Calculate total amount using correct prices
-        const price = PRICES[data.type] || PRICES['Plain']; // Default to Plain price if type not found
-        const calculatedAmount = Number(data.quantity) * price;
-
-        return {
-          id: doc.id,
-          ...data,
-          date: new Date(data.date),
-          status: data.status || '',
-          customer: data.customer || '',
-          quantity: Number(data.quantity) || 0,
-          type: data.type || 'Plain',
-          totalAmount: calculatedAmount
-        };
-      });
+          return {
+            id: doc.id,
+            ...data,
+            date: new Date(data.date),
+            status: data.status || '',
+            customer: data.customer || '',
+            quantity: quantity,
+            type: type,
+            totalAmount: calculatedAmount
+          };
+        })
+        .filter(order => new Date(order.date).getFullYear() === selectedYear);
 
       // Initialize tracking variables
       const monthlyOrders = Array(12).fill(0);
@@ -390,6 +453,43 @@ export default function CEO() {
     );
   };
 
+  const renderYearSelector = () => (
+    <div className="analytics-section">
+      <div className="time-range-selector">
+        <button 
+          className={`time-range-btn ${selectedYear === 2021 ? 'active' : ''}`}
+          onClick={() => setSelectedYear(2021)}
+        >
+          2021
+        </button>
+        <button 
+          className={`time-range-btn ${selectedYear === 2022 ? 'active' : ''}`}
+          onClick={() => setSelectedYear(2022)}
+        >
+          2022
+        </button>
+        <button 
+          className={`time-range-btn ${selectedYear === 2023 ? 'active' : ''}`}
+          onClick={() => setSelectedYear(2023)}
+        >
+          2023
+        </button>
+        <button 
+          className={`time-range-btn ${selectedYear === 2024 ? 'active' : ''}`}
+          onClick={() => setSelectedYear(2024)}
+        >
+          2024
+        </button>
+        <button 
+          className={`time-range-btn ${selectedYear === new Date().getFullYear() ? 'active' : ''}`}
+          onClick={() => setSelectedYear(new Date().getFullYear())}
+        >
+          Current Year
+        </button>
+      </div>
+    </div>
+  );
+
   const renderPredictiveAnalytics = () => {
     if (isLoading) return <div className="loading-state">Loading analytics...</div>;
     if (error) return <div className="error-state">{error}</div>;
@@ -399,6 +499,7 @@ export default function CEO() {
 
     return (
       <div className="predictive-analytics">
+        {renderYearSelector()}
         {/* Summary Metrics */}
         <div className="analytics-card summary-metrics">
           <h3>Key Metrics</h3>
@@ -424,30 +525,31 @@ export default function CEO() {
             <h3>Order Trends</h3>
             <div className="chart-container">
               <Line
+                id="order-trends-chart"
                 data={{
-                  labels: months,
+                  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                   datasets: [
                     {
                       label: 'Plain',
-                      data: predictiveAnalytics.orderTrends.plain || Array(12).fill(0),
+                      data: predictiveAnalytics.orderTrends.plain,
                       borderColor: '#3498db',
                       tension: 0.4
                     },
                     {
                       label: 'Lithograph',
-                      data: predictiveAnalytics.orderTrends.lithograph || Array(12).fill(0),
+                      data: predictiveAnalytics.orderTrends.lithograph,
                       borderColor: '#e74c3c',
                       tension: 0.4
                     },
                     {
                       label: 'Class C',
-                      data: predictiveAnalytics.orderTrends.classC || Array(12).fill(0),
-                      borderColor: '#2ecc71',
+                      data: predictiveAnalytics.orderTrends.classC,
+                      borderColor: '#f1c40f',
                       tension: 0.4
                     }
                   ]
                 }}
-                options={chartOptions}
+                options={orderTrendsChartOptions}
               />
             </div>
           </div>
@@ -504,86 +606,103 @@ export default function CEO() {
   };
 
   const renderSalesAnalytics = () => (
-    <div className="analytics-section">
-      <div className="analytics-card">
-        <h3>Monthly Sales Revenue</h3>
-        <div className="chart-container">
-          <Line 
-            id="sales-revenue-chart"
-            data={{
-              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-              datasets: [
-                {
-                  label: 'Revenue',
-                  data: salesData?.monthlyRevenue || Array(12).fill(0),
-                  borderColor: '#2ecc71',
-                  tension: 0.4
-                }
-              ]
-            }}
-            options={chartOptions}
-          />
+    <div className="sales-analytics">
+      {renderYearSelector()}
+      <div className="analytics-section">
+        <div className="analytics-card">
+          <h3>Monthly Sales Revenue</h3>
+          <div className="chart-container">
+            <Line 
+              id="sales-revenue-chart"
+              data={{
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [
+                  {
+                    label: 'Revenue',
+                    data: salesData?.monthlyRevenue || Array(12).fill(0),
+                    borderColor: '#2ecc71',
+                    tension: 0.4
+                  }
+                ]
+              }}
+              options={chartOptions}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="analytics-card">
-        <h3>Sales by Product Type</h3>
-        <div className="chart-container">
-          <Bar 
-            id="sales-by-type-chart"
-            data={{
-              labels: ['Plain', 'Lithograph', 'Class C'],
-              datasets: [{
-                label: 'Sales Volume',
-                data: salesData?.productTypeSales || [0, 0, 0],
-                backgroundColor: ['#3498db', '#e74c3c', '#f1c40f']
-              }]
-            }}
-            options={chartOptions}
-          />
+        <div className="analytics-card">
+          <h3>Sales by Product Type</h3>
+          <div className="chart-container">
+            <Bar 
+              id="sales-by-type-chart"
+              data={{
+                labels: ['Plain', 'Lithograph', 'Class C'],
+                datasets: [{
+                  label: 'Sales Volume',
+                  data: salesData?.productTypeSales || [0, 0, 0],
+                  backgroundColor: ['#3498db', '#e74c3c', '#f1c40f']
+                }]
+              }}
+              options={chartOptions}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 
   const renderProductionAnalytics = () => (
-    <div className="analytics-section">
-      <div className="analytics-card">
-        <h3>Production Efficiency</h3>
-        <div className="chart-container">
-          <Line 
-            id="production-efficiency-chart"
-            data={{
-              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-              datasets: [
-                {
-                  label: 'Efficiency Rate',
-                  data: productionData?.efficiency || Array(12).fill(0),
-                  borderColor: '#3498db',
-                  tension: 0.4
-                }
-              ]
-            }}
-            options={chartOptions}
-          />
-        </div>
+    <div className="production-analytics">
+      {renderYearSelector()}
+      <div className="analytics-header">
+        <h2>Production Overview</h2>
+        <div className="date-range">Monthly Analysis</div>
       </div>
-
-      <div className="analytics-card">
-        <h3>Production Volume by Type</h3>
-        <div className="chart-container">
-          <Bar 
-            id="production-volume-chart"
-            data={{
-              labels: ['Plain', 'Lithograph', 'Class C'],
-              datasets: [{
-                label: 'Production Volume',
-                data: productionData?.volumeByType || [0, 0, 0],
-                backgroundColor: ['#2ecc71', '#9b59b6', '#e67e22']
-              }]
-            }}
-            options={chartOptions}
-          />
+      <div className="analytics-grid">
+        <div className="graph-wrapper">
+          <div className="chart-container">
+            {isLoading ? (
+              <div className="loading-spinner">Loading production data...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <Line 
+                id="production-efficiency-chart"
+                data={{
+                  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                  datasets: [
+                    {
+                      label: 'Efficiency Rate',
+                      data: productionData?.efficiency || Array(12).fill(0),
+                      borderColor: '#3b82f6',
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      tension: 0.4,
+                      fill: true
+                    }
+                  ]
+                }}
+                options={chartOptions}
+              />
+            )}
+          </div>
+        </div>
+        <div className="stats-container">
+          <div className="stat-card">
+            <h3>Average Efficiency</h3>
+            <div className="stat-value">
+              {productionData?.efficiency ? 
+                `${Math.round(productionData.efficiency.reduce((a, b) => a + b, 0) / 12)}%` 
+                : '0%'}
+            </div>
+          </div>
+          <div className="stat-card">
+            <h3>Peak Efficiency</h3>
+            <div className="stat-value">
+              {productionData?.efficiency ? 
+                `${Math.max(...productionData.efficiency)}%` 
+                : '0%'}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -591,27 +710,12 @@ export default function CEO() {
 
   const renderMaintenanceAnalytics = () => (
     <div className="analytics-section">
-      <div className="analytics-card">
+      <div className="analytics-card pie-chart-wrapper">
         <h3>Maintenance Issues by Priority</h3>
         <div className="chart-container">
           <Pie
-            id="maintenance-priority-chart"
-            data={{
-              labels: ['High', 'Medium', 'Low'],
-              datasets: [{
-                data: maintenanceData?.issuesByPriority || [0, 0, 0],
-                backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71']
-              }]
-            }}
-            options={{
-              ...chartOptions,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: 'right'
-                }
-              }
-            }}
+            data={pieChartData}
+            options={pieChartOptions}
           />
         </div>
       </div>
@@ -673,6 +777,116 @@ export default function CEO() {
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 3);
+  };
+
+  // Update the Pie chart configuration
+  const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        align: 'center',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'circle',
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif",
+          },
+          generateLabels: function(chart) {
+            const data = chart.data;
+            if (data.labels.length && data.datasets.length) {
+              return data.labels.map((label, i) => {
+                const value = data.datasets[0].data[i];
+                const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                
+                return {
+                  text: `${label} (${percentage}%)`,
+                  fillStyle: data.datasets[0].backgroundColor[i],
+                  strokeStyle: data.datasets[0].backgroundColor[i],
+                  lineWidth: 0,
+                  hidden: isNaN(data.datasets[0].data[i]),
+                  index: i
+                };
+              });
+            }
+            return [];
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'white',
+        titleColor: '#1e293b',
+        bodyColor: '#475569',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            const value = context.raw;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${context.label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    elements: {
+      arc: {
+        borderWidth: 0,
+        borderRadius: 6
+      }
+    },
+    cutout: '60%', // Makes it a donut chart
+    rotation: -90,
+    animation: {
+      animateRotate: true,
+      animateScale: true
+    }
+  };
+
+  // Update the Pie chart data configuration
+  const pieChartData = {
+    labels: ['High', 'Medium', 'Low'],
+    datasets: [{
+      data: maintenanceData?.issuesByPriority || [0, 0, 0],
+      backgroundColor: [
+        'rgba(239, 68, 68, 0.9)',   // Red for High
+        'rgba(249, 115, 22, 0.9)',  // Orange for Medium (changed from yellow)
+        'rgba(34, 197, 94, 0.9)'    // Green for Low
+      ],
+      hoverBackgroundColor: [
+        'rgba(239, 68, 68, 1)',
+        'rgba(249, 115, 22, 1)',    // Orange hover
+        'rgba(34, 197, 94, 1)'
+      ]
+    }]
+  };
+
+  const orderTrendsChartOptions = {
+    ...chartOptions,
+    plugins: {
+      ...chartOptions.plugins,
+      legend: {
+        position: 'top',
+        align: 'center',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          boxWidth: 6,
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif",
+            weight: '500'
+          }
+        }
+      }
+    }
   };
 
   return (

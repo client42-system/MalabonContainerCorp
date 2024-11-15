@@ -445,55 +445,47 @@ function MarketingDashboard() {
 
   return (
     <div className="marketing">
-      <div className="dashboard-container">
-        <button className="logout-button" onClick={handleLogout}>
-          <FaSignOutAlt /> Logout
-        </button>
-        <h1 className="dashboard-title">Marketing Dashboard</h1>
-        
-        <div className="tabs-container">
-          <div className="tabs">
-            <button 
-              className={`tab ${activeTab === 'purchased' ? 'active' : ''}`}
-              onClick={() => setActiveTab('purchased')}
-            >
-              <FaShoppingCart /> Purchased Orders
-            </button>
-            <button 
-              className={`tab ${activeTab === 'customer' ? 'active' : ''}`}
-              onClick={() => setActiveTab('customer')}
-            >
-              <FaUsers /> Customer Data
-            </button>
-          </div>
+      <h1 className="marketing-dashboard-title">Marketing Dashboard</h1>
+      
+      <div className="tabs-container">
+        <div className="tabs">
+          <button 
+            className={`tab ${activeTab === 'purchased' ? 'active' : ''}`}
+            onClick={() => setActiveTab('purchased')}
+          >
+            <FaShoppingCart /> Purchased Orders
+          </button>
+          <button 
+            className={`tab ${activeTab === 'customer' ? 'active' : ''}`}
+            onClick={() => setActiveTab('customer')}
+          >
+            <FaUsers /> Customer Data
+          </button>
         </div>
-        
-        <div className="tab-content">
-          <h2 className="section-title">
-            {activeTab === 'purchased' ? 'Purchased Orders' : 'Customer Data'}
-          </h2>
-          <p className="section-description">
-            {activeTab === 'purchased' ? 'Manage and view purchase orders' : 'View and analyze customer information'}
-          </p>
-          
-          {activeTab === 'purchased' && renderPurchasedOrders()}
-          {activeTab === 'customer' && renderCustomerData()}
-        </div>
+      </div>
+      
+      <p className="orders-description">Manage and view purchase orders</p>
+      
+      <h2 className="purchased-orders-title">Purchased Orders</h2>
+      
+      {activeTab === 'purchased' && renderPurchasedOrders()}
+      {activeTab === 'customer' && renderCustomerData()}
 
-        {selectedOrder && renderOrderDetails()}
+      {selectedOrder && renderOrderDetails()}
 
-        {isNewOrderModalOpen && (
-          <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content new-order-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>New Order</h2>
-                <button className="close-button" onClick={closeModal}>
-                  <FaTimes />
-                </button>
-              </div>
-              <form onSubmit={handleNewOrder}>
+      {isNewOrderModalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content new-order-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Create New Order</h2>
+              <button className="close-button" onClick={closeModal}>
+                <FaTimes />
+              </button>
+            </div>
+            <form onSubmit={handleNewOrder} className="new-order-form">
+              <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="customer">Customer:</label>
+                  <label htmlFor="customer">Customer Name</label>
                   <input
                     type="text"
                     id="customer"
@@ -503,7 +495,20 @@ function MarketingDashboard() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="type">Type:</label>
+                  <label htmlFor="contactNumber">Contact Number</label>
+                  <input
+                    type="tel"
+                    id="contactNumber"
+                    value={newOrder.contactNumber}
+                    onChange={(e) => setNewOrder({...newOrder, contactNumber: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="type">Product Type</label>
                   <select
                     id="type"
                     value={newOrder.type}
@@ -516,53 +521,48 @@ function MarketingDashboard() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="contactNumber">Contact Number:</label>
-                  <input
-                    type="tel"
-                    id="contactNumber"
-                    value={newOrder.contactNumber}
-                    onChange={(e) => setNewOrder({...newOrder, contactNumber: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="quantity">Quantity:</label>
+                  <label htmlFor="quantity">Quantity</label>
                   <input
                     type="number"
                     id="quantity"
                     value={newOrder.quantity}
                     onChange={(e) => setNewOrder({...newOrder, quantity: parseInt(e.target.value)})}
                     required
+                    min="1"
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="address">Address:</label>
-                  <input
-                    type="text"
-                    id="address"
-                    value={newOrder.address}
-                    onChange={(e) => setNewOrder({...newOrder, address: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="notes">Notes:</label>
-                  <textarea
-                    id="notes"
-                    value={newOrder.notes}
-                    onChange={(e) => setNewOrder({...newOrder, notes: e.target.value})}
-                  />
-                </div>
-                <div className="action-buttons-container">
-                  <button type="submit" className="submit-btn">
-                    <FaPlus /> Create Order
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="address">Delivery Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  value={newOrder.address}
+                  onChange={(e) => setNewOrder({...newOrder, address: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="notes">Additional Notes</label>
+                <textarea
+                  id="notes"
+                  value={newOrder.notes}
+                  onChange={(e) => setNewOrder({...newOrder, notes: e.target.value})}
+                  placeholder="Enter any special instructions or notes here..."
+                />
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="submit-btn">
+                  <FaPlus /> Create Order
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

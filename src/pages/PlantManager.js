@@ -16,6 +16,7 @@ export default function PlantManagerDashboard() {
     deliveryDate: '',
     selectedOrder: null
   })
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -24,30 +25,74 @@ export default function PlantManagerDashboard() {
   }, []);
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     try {
       const ordersRef = collection(db, 'orders');
-      const q = query(
+      
+      // Get start and end dates for current year
+      const currentYear = new Date().getFullYear();
+      const startOfYear = new Date(currentYear, 0, 1).toISOString(); // January 1st
+      const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString(); // December 31st 23:59:59
+      
+      // Query for accepted orders
+      const acceptedOrdersQuery = query(
         ordersRef,
-        where('status', 'in', ['ACCEPTED', 'COMPLETED', 'OUT_FOR_DELIVERY', 'DELIVERED']),
+        where('status', '==', 'Pending'),
+        where('date', '>=', startOfYear),
+        where('date', '<=', endOfYear),
         orderBy('date', 'desc')
       );
       
-      const querySnapshot = await getDocs(q);
-      const orders = querySnapshot.docs.map(doc => ({
+      const acceptedSnapshot = await getDocs(acceptedOrdersQuery);
+      const acceptedOrdersData = acceptedSnapshot.docs.map(doc => ({
         ...doc.data(),
-        firestoreId: doc.id
+        firestoreId: doc.id,
+        id: doc.data().id || doc.id
       }));
+      
+      setAcceptedOrders(acceptedOrdersData);
+      console.log('Fetched accepted orders:', acceptedOrdersData);
 
-      // Filter orders based on status
-      const accepted = orders.filter(order => order.status === 'ACCEPTED');
-      const completed = orders.filter(order => order.status === 'COMPLETED');
-      const outForDelivery = orders.filter(order => order.status === 'OUT_FOR_DELIVERY');
+      // Query for completed orders
+      const completedOrdersQuery = query(
+        ordersRef,
+        where('status', '==', 'COMPLETED'),
+        where('date', '>=', startOfYear),
+        where('date', '<=', endOfYear),
+        orderBy('date', 'desc')
+      );
+      
+      const completedSnapshot = await getDocs(completedOrdersQuery);
+      const completedOrdersData = completedSnapshot.docs.map(doc => ({
+        ...doc.data(),
+        firestoreId: doc.id,
+        id: doc.data().id || doc.id
+      }));
+      
+      setCompletedOrders(completedOrdersData);
 
-      setAcceptedOrders(accepted);
-      setCompletedOrders(completed);
-      setOutForDeliveryOrders(outForDelivery);
+      // Query for out for delivery orders
+      const outForDeliveryOrdersQuery = query(
+        ordersRef,
+        where('status', '==', 'OUT_FOR_DELIVERY'),
+        where('date', '>=', startOfYear),
+        where('date', '<=', endOfYear),
+        orderBy('date', 'desc')
+      );
+      
+      const outForDeliverySnapshot = await getDocs(outForDeliveryOrdersQuery);
+      const outForDeliveryOrdersData = outForDeliverySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        firestoreId: doc.id,
+        id: doc.data().id || doc.id
+      }));
+      
+      setOutForDeliveryOrders(outForDeliveryOrdersData);
+
     } catch (error) {
       console.error('Error fetching orders:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,9 +101,10 @@ export default function PlantManagerDashboard() {
       const orderRef = doc(db, 'orders', order.firestoreId);
       await updateDoc(orderRef, {
         status: 'COMPLETED',
-        completedDate: new Date().toISOString()
+        completedAt: new Date().toISOString(),
+        completedBy: auth.currentUser.uid
       });
-      fetchOrders(); // This will update all order lists
+      fetchOrders(); // Refresh the orders after update
     } catch (error) {
       console.error('Error completing order:', error);
     }
@@ -186,47 +232,71 @@ export default function PlantManagerDashboard() {
     );
   };
 
-  const renderAcceptedOrders = () => (
-    <div className="orders-table">
-      <table className="order-table">
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Customer</th>
-            <th>Type</th>
-            <th>Quantity</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {acceptedOrders.map((order) => (
-            <tr key={order.id}>
-              <td>{order.id}</td>
-              <td>{order.customer}</td>
-              <td>{order.type}</td>
-              <td>{order.quantity}</td>
-              <td>
-                <span className={`status-badge ${order.status.toLowerCase()}`}>
-                  {order.status}
-                </span>
-              </td>
-              <td>
-                <div className="action-buttons">
-                  <button className="complete-btn" onClick={() => handleCompleteOrder(order)}>
-                    <FaCheck /> Complete
-                  </button>
-                  <button className="view-btn" onClick={() => setSelectedOrder(order)}>
-                    <FaEye /> View Details
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  const renderAcceptedOrders = () => {
+    try {
+      return (
+        <div className="orders-table">
+          {isLoading ? (
+            <div className="loading-message">Loading orders...</div>
+          ) : acceptedOrders?.length === 0 ? (
+            <div className="no-orders-message">No accepted orders found</div>
+          ) : !acceptedOrders ? (
+            <div className="error-message">Error loading orders</div>
+          ) : (
+            <table className="order-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Type</th>
+                  <th>Quantity</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {acceptedOrders.map((order) => {
+                  console.log('Rendering order:', order); // Debug log
+                  return (
+                    <tr key={order.firestoreId || order.id}>
+                      <td>{order.id}</td>
+                      <td>{order.customer}</td>
+                      <td>{order.type}</td>
+                      <td>{order.quantity}</td>
+                      <td>
+                        <span className={`status-badge ${(order.status || '').toLowerCase()}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="complete-btn" 
+                            onClick={() => handleCompleteOrder(order)}
+                          >
+                            <FaCheck /> Complete
+                          </button>
+                          <button 
+                            className="view-btn" 
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <FaEye /> View Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      );
+    } catch (error) {
+      console.error('Error rendering accepted orders:', error);
+      return <div className="error-message">Error rendering orders: {error.message}</div>;
+    }
+  };
 
   const renderCompletedOrders = () => (
     <div className="orders-table">

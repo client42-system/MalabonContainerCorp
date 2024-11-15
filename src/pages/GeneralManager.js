@@ -166,114 +166,147 @@ function GeneralManager() {
     };
   };
 
-  const renderProductionGraph = (data, title) => (
-    <div className="chart-container">
-      <Line 
-        data={{
-          ...data,
-          datasets: data.datasets.map(dataset => ({
-            ...dataset,
-            borderWidth: 2,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.4,
-            fill: true,
-            backgroundColor: (context) => {
-              const ctx = context.chart.ctx;
-              const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-              gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-              gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
-              return gradient;
-            }
-          }))
-        }}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                padding: 20,
-                font: {
-                  size: 12,
-                  weight: 'bold'
-                },
-                usePointStyle: true,
-                pointStyle: 'circle'
-              }
-            },
-            title: {
-              display: true,
-              text: title,
-              font: {
-                size: 18,
-                weight: 'bold'
-              },
-              padding: {
-                top: 10,
-                bottom: 30
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                display: false
-              },
-              ticks: {
-                font: {
-                  size: 12
-                }
-              }
-            },
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: '#f0f0f0'
-              },
-              ticks: {
-                font: {
-                  size: 12
-                }
-              }
-            }
-          },
-          elements: {
-            line: {
-              tension: 0.4
-            },
-            point: {
-              radius: 4,
-              hoverRadius: 6,
-              backgroundColor: 'white',
-              borderWidth: 2
-            }
-          },
-          interaction: {
-            mode: null
-          }
-        }}
-      />
+  const renderProductionAnalytics = () => (
+    <div className="production-analytics">
+      <div className="analytics-header">
+        <h2>Production Overview</h2>
+        <div className="date-range">Last 30 Days</div>
+      </div>
+      <div className="analytics-grid">
+        <div className="graph-wrapper">
+          {weeklyProductionData && (
+            <div className="chart-container">
+              {renderProductionGraph(weeklyProductionData, "Weekly Production")}
+            </div>
+          )}
+        </div>
+        <div className="graph-wrapper">
+          {monthlyProductionData && (
+            <div className="chart-container">
+              {renderProductionGraph(monthlyProductionData, "Monthly Production")}
+            </div>
+          )}
+        </div>
+        <div className="stats-container">
+          <div className="stat-card">
+            <h3>Weekly Total</h3>
+            <div className="stat-value">
+              {weeklyProductionData ? weeklyProductionData.datasets[0].data.reduce((a, b) => a + b, 0) : 0}
+            </div>
+          </div>
+          <div className="stat-card">
+            <h3>Monthly Total</h3>
+            <div className="stat-value">
+              {monthlyProductionData ? monthlyProductionData.datasets[0].data.reduce((a, b) => a + b, 0) : 0}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
-  const renderProductionAnalytics = () => (
-    <div className="production-analytics">
-      <h2>Production Analytics</h2>
-      <div className="graphs-container">
-        {weeklyProductionData && (
-          <div className="graph-wrapper">
-            {renderProductionGraph(weeklyProductionData, "Weekly Production")}
-          </div>
-        )}
-        {monthlyProductionData && (
-          <div className="graph-wrapper">
-            {renderProductionGraph(monthlyProductionData, "Monthly Production")}
-          </div>
-        )}
-      </div>
-    </div>
+  const renderProductionGraph = (data, title) => (
+    <Line 
+      data={{
+        ...data,
+        datasets: data.datasets.map(dataset => ({
+          ...dataset,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 2,
+          pointBackgroundColor: '#3b82f6',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: '#3b82f6',
+          tension: 0.4
+        }))
+      }}
+      options={{
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 12,
+                family: "'Segoe UI', sans-serif",
+                weight: '500'
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            titleColor: '#1e293b',
+            bodyColor: '#475569',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 6,
+            usePointStyle: true,
+            callbacks: {
+              label: function(context) {
+                return `Quantity: ${context.parsed.y}`;
+              }
+            }
+          },
+          title: {
+            display: true,
+            text: title,
+            color: '#1e293b',
+            font: {
+              size: 20,
+              family: "'Segoe UI', sans-serif",
+              weight: '600'
+            },
+            padding: { bottom: 30 }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(226, 232, 240, 0.6)',
+              drawBorder: false
+            },
+            border: {
+              display: false
+            },
+            ticks: {
+              padding: 10,
+              color: '#64748b',
+              font: {
+                size: 12,
+                family: "'Segoe UI', sans-serif"
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            border: {
+              display: false
+            },
+            ticks: {
+              padding: 10,
+              color: '#64748b',
+              font: {
+                size: 12,
+                family: "'Segoe UI', sans-serif"
+              }
+            }
+          }
+        }
+      }}
+    />
   );
 
   const handleLogout = async () => {

@@ -85,10 +85,19 @@
 }
 
 .ceo .chart-container {
+  height: 400px;
   position: relative;
-  margin: auto;
-  height: 300px;
-  width: 100%;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+.ceo .chart-container:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .ceo .stats-grid {
@@ -231,18 +240,19 @@
 
 .ceo .analytics-card {
   background: white;
-  border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
 }
 
 .ceo .analytics-card h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 20px;
+  color: #1e293b;
+  margin: 0 0 20px 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 /* Chart Containers */

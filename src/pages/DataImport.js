@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 import { FaArrowLeft, FaFileImport } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -16,89 +16,91 @@ export default function DataImport() {
   };
 
   const handleFileUpload = async (event) => {
-    try {
-      setImporting(true);
-      setStatus('Starting import...');
-      
-      const file = event.target.files[0];
-      if (!file) {
-        setStatus('Error: No file selected');
-        return;
-      }
+    const file = event.target.files[0];
+    setImporting(true);
+    setStatus('');
 
-      const fileExt = file.name.split('.').pop().toLowerCase();
-      if (!['xlsx', 'xls'].includes(fileExt)) {
-        setStatus('Error: Please upload a valid Excel file (.xlsx or .xls)');
-        return;
-      }
+    if (!file) {
+      setStatus('Error: No file selected');
+      setImporting(false);
+      return;
+    }
 
-      const reader = new FileReader();
-      
-      reader.onload = async (e) => {
-        try {
-          const workbook = XLSX.read(e.target.result, { type: 'binary' });
-          const allData = [];
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const workbook = XLSX.read(e.target.result, { type: 'binary' });
+        const allData = [];
 
-          workbook.SheetNames.forEach(sheetName => {
-            const worksheet = workbook.Sheets[sheetName];
-            const data = XLSX.utils.sheet_to_json(worksheet);
-            allData.push(...data);
+        workbook.SheetNames.forEach(sheetName => {
+          const worksheet = workbook.Sheets[sheetName];
+          const data = XLSX.utils.sheet_to_json(worksheet);
+          allData.push(...data);
+        });
+
+        if (allData.length === 0) {
+          setStatus('Error: Excel file is empty');
+          return;
+        }
+
+        for (const row of allData) {
+          const missingFields = [];
+          const requiredFields = ['ID NUM', 'CUSTOMER', 'TYPE', 'QUANTITY', 'ADDRESS', 'CONTACT NUMBER', 'DATE', 'TOTAL'];
+
+          requiredFields.forEach(field => {
+            if (!row[field]) {
+              missingFields.push(field);
+            }
           });
 
-          if (allData.length === 0) {
-            setStatus('Error: Excel file is empty');
-            return;
+          if (missingFields.length > 0) {
+            throw new Error(`Missing required fields in row with ID: ${row['ID NUM'] || 'unknown'}. Missing: ${missingFields.join(', ')}`);
           }
 
-          for (const row of allData) {
-            const missingFields = [];
-            const requiredFields = ['ID NUM', 'CUSTOMER', 'TYPE', 'QUANTITY', 'ADDRESS', 'CONTACT NUMBER', 'DATE', 'TOTAL'];
-
-            requiredFields.forEach(field => {
-              if (!row[field]) {
-                missingFields.push(field);
-              }
-            });
-
-            if (missingFields.length > 0) {
-              throw new Error(`Missing required fields in row with ID: ${row['ID NUM'] || 'unknown'}. Missing: ${missingFields.join(', ')}`);
-            }
-
-            const orderData = {
-              id: row['ID NUM'].toString(),
-              customer: row['CUSTOMER'].toString(),
-              type: row['TYPE'].toString(),
-              quantity: parseInt(row['QUANTITY']) || 0,
-              address: row['ADDRESS'].toString(),
-              contactNumber: row['CONTACT NUMBER'].toString(),
-              date: formatExcelDate(row['DATE']),
-              amount: parseInt(row['TOTAL']) || 0,
-              status: 'Completed',
-              deliverySchedule: row['Delivery Schedule'] ? row['Delivery Schedule'].toString() : null,
-              paymentStatus: 'Paid'
-            };
-
-            const orderRef = doc(collection(db, 'orders'), orderData.id);
-            await setDoc(orderRef, orderData);
+          // Parse and validate the date before creating the order data
+          let orderDate;
+          try {
+            orderDate = formatExcelDate(row['DATE']);
+          } catch (error) {
+            throw new Error(`Invalid date format for ID: ${row['ID NUM']}. Date value: ${row['DATE']}`);
           }
-          setStatus('Import completed successfully!');
-        } catch (error) {
-          console.error('Import error:', error);
-          setStatus(`Import failed: ${error.message}`);
+
+          const orderData = {
+            id: row['ID NUM'].toString(),
+            customer: row['CUSTOMER'].toString(),
+            type: row['TYPE'].toString(),
+            quantity: parseInt(row['QUANTITY']) || 0,
+            address: row['ADDRESS'].toString(),
+            contactNumber: row['CONTACT NUMBER'].toString(),
+            date: orderDate,
+            amount: parseInt(row['TOTAL']) || 0,
+            status: 'Completed',
+            expectedDeliveryDate: row['EXPECTED DELIVERY DATE'] ? formatExcelDate(row['EXPECTED DELIVERY DATE']) : null,
+            actualDeliveryDate: row['ACTUAL DELIVERY DATE'] ? formatExcelDate(row['ACTUAL DELIVERY DATE']) : null,
+            deliveryStatus: row['ACTUAL DELIVERY DATE'] ? 'DELIVERED' : 'PENDING',
+            paymentStatus: 'Paid'
+          };
+
+          // Validate the order data
+          const validationErrors = validateOrder(orderData);
+          if (validationErrors.length > 0) {
+            throw new Error(`Validation errors for ID ${orderData.id}: ${validationErrors.join(', ')}`);
+          }
+
+          const orderRef = doc(collection(db, 'orders'), orderData.id);
+          await setDoc(orderRef, orderData);
         }
-      };
 
-      reader.onerror = (error) => {
-        setStatus(`Error reading file: ${error}`);
-      };
-      
-      reader.readAsBinaryString(file);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setStatus(`Error: ${error.message}`);
-    } finally {
-      setImporting(false);
-    }
+        setStatus(`Successfully imported ${allData.length} orders`);
+      } catch (error) {
+        console.error('Import error:', error);
+        setStatus(`Error: ${error.message}`);
+      } finally {
+        setImporting(false);
+      }
+    };
+
+    reader.readAsBinaryString(file);
   };
 
   return (
@@ -119,8 +121,8 @@ export default function DataImport() {
           <h3>Import Historical Orders</h3>
           <p className="import-description">
             Upload your Excel file containing historical order data. 
-            The file should include: Order ID, Customer, Type, Quantity, Address, Contact Number, Date, and Status.
-            temporary lang to :).
+            The file should include: Order ID, Customer, Type, Quantity, Address, Contact Number, Date, Status, 
+            and Delivery Schedule (Expected Delivery Date, Actual Delivery Date).
           </p>
 
           <div className="import-controls">
@@ -185,3 +187,26 @@ function formatExcelDate(dateValue) {
 
   return date.toISOString();
 } 
+
+const validateOrder = (order) => {
+  const errors = [];
+  
+  if (!order.date || isNaN(new Date(order.date).getTime())) {
+    errors.push(`Invalid order date for Order ID: ${order.id}`);
+  }
+
+  if (order.expectedDeliveryDate && isNaN(new Date(order.expectedDeliveryDate).getTime())) {
+    errors.push(`Invalid expected delivery date for Order ID: ${order.id}`);
+  }
+
+  if (order.actualDeliveryDate && isNaN(new Date(order.actualDeliveryDate).getTime())) {
+    errors.push(`Invalid actual delivery date for Order ID: ${order.id}`);
+  }
+
+  if (order.actualDeliveryDate && order.expectedDeliveryDate && 
+      new Date(order.actualDeliveryDate) < new Date(order.expectedDeliveryDate)) {
+    errors.push(`Actual delivery date cannot be before expected delivery date for Order ID: ${order.id}`);
+  }
+
+  return errors;
+}; 

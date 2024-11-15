@@ -139,12 +139,20 @@
 }
 
 .accountant .filter-select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 14px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
   background-color: white;
-  width: 20%;
+  color: #2d3748;
+  font-size: 14px;
+  min-width: 150px;
+  cursor: pointer;
+}
+
+.accountant .filter-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 1px #3498db;
 }
 
 .accountant .table-container {
@@ -341,7 +349,7 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -679,4 +687,50 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Add/Update these styles */
+.accountant .action-buttons-container {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.accountant .view-btn,
+.accountant .pay-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.accountant .view-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.accountant .pay-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.accountant .view-btn:hover {
+  background-color: #2980b9;
+}
+
+.accountant .pay-btn:hover {
+  background-color: #27ae60;
+}
+
+/* Update the action column width */
+.accountant .order-table th:nth-child(7),
+.accountant .order-table td:nth-child(7) { 
+  width: 21%; 
+  min-width: 150px;
 }

@@ -60,12 +60,7 @@ export default function PlantSupervisor() {
       setIsLoading(true);
       setError(null);
       
-      // Get today's date at midnight
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
       const ordersRef = collection(db, 'orders');
-      // Simplified query that doesn't require a composite index
       const q = query(
         ordersRef,
         where('status', '==', 'DELIVERED')
@@ -78,15 +73,20 @@ export default function PlantSupervisor() {
       for (let i = 6; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const dateStr = date.toLocaleDateString();
+        const dateStr = date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        });
         deliveredOrders[dateStr] = 0;
       }
       
-      // Process delivered orders and sort in memory
       querySnapshot.forEach((doc) => {
         const order = doc.data();
         if (order.deliveredDate) {
-          const date = new Date(order.deliveredDate).toLocaleDateString();
+          const date = new Date(order.deliveredDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
+          });
           if (deliveredOrders[date] !== undefined) {
             deliveredOrders[date] += Number(order.quantity) || 0;
           }
@@ -100,10 +100,15 @@ export default function PlantSupervisor() {
           {
             label: 'Delivered Orders',
             data: Object.values(deliveredOrders),
-            fill: false,
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-            tension: 0.1
+            fill: true,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#3b82f6',
+            tension: 0.4
           }
         ]
       });
@@ -218,46 +223,159 @@ export default function PlantSupervisor() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
+        display: true,
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif",
+            weight: '500'
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#1e293b',
+        bodyColor: '#475569',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            return `Quantity: ${context.parsed.y}`;
+          }
+        }
       },
       title: {
         display: true,
-        text: 'Delivered Orders (Last 7 Days)'
+        text: 'Daily Production Output',
+        color: '#1e293b',
+        font: {
+          size: 20,
+          family: "'Segoe UI', sans-serif",
+          weight: '600'
+        },
+        padding: { bottom: 30 }
       }
     },
     scales: {
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(226, 232, 240, 0.6)',
+          drawBorder: false
+        },
+        border: {
+          display: false
+        },
+        ticks: {
+          padding: 10,
+          color: '#64748b',
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif"
+          }
+        },
         title: {
           display: true,
-          text: 'Quantity Delivered'
+          text: 'Quantity Delivered',
+          color: '#475569',
+          font: {
+            size: 13,
+            family: "'Segoe UI', sans-serif",
+            weight: '600'
+          },
+          padding: { bottom: 10 }
         }
       },
       x: {
+        grid: {
+          display: false
+        },
+        border: {
+          display: false
+        },
+        ticks: {
+          padding: 10,
+          color: '#64748b',
+          font: {
+            size: 12,
+            family: "'Segoe UI', sans-serif"
+          }
+        },
         title: {
           display: true,
-          text: 'Date'
+          text: 'Date',
+          color: '#475569',
+          font: {
+            size: 13,
+            family: "'Segoe UI', sans-serif",
+            weight: '600'
+          },
+          padding: { top: 10 }
         }
+      }
+    },
+    elements: {
+      line: {
+        tension: 0.4,
+        borderWidth: 2,
+        fill: true
+      },
+      point: {
+        radius: 4,
+        hitRadius: 6,
+        hoverRadius: 6,
+        hoverBorderWidth: 2
       }
     }
   };
 
   const renderProductionAnalytics = () => (
     <div className="production-analytics">
-      <div className="graph-wrapper">
-        <h3>Delivered Orders Analytics</h3>
-        <div className="chart-container">
-          {isLoading ? (
-            <p>Loading production data...</p>
-          ) : error ? (
-            <p className="error-message">{error}</p>
-          ) : productionData ? (
-            <Line options={chartOptions} data={productionData} />
-          ) : (
-            <p>No delivery data available</p>
-          )}
+      <div className="analytics-header">
+        <h2>Production Overview</h2>
+        <div className="date-range">Last 7 Days</div>
+      </div>
+      <div className="analytics-grid">
+        <div className="graph-wrapper">
+          <div className="chart-container">
+            {isLoading ? (
+              <div className="loading-spinner">Loading production data...</div>
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : productionData ? (
+              <Line options={chartOptions} data={productionData} />
+            ) : (
+              <div className="no-data-message">No delivery data available</div>
+            )}
+          </div>
+        </div>
+        <div className="stats-container">
+          <div className="stat-card">
+            <h3>Total Delivered</h3>
+            <div className="stat-value">
+              {productionData ? productionData.datasets[0].data.reduce((a, b) => a + b, 0) : 0}
+            </div>
+          </div>
+          <div className="stat-card">
+            <h3>Daily Average</h3>
+            <div className="stat-value">
+              {productionData ? 
+                Math.round(productionData.datasets[0].data.reduce((a, b) => a + b, 0) / 7) 
+                : 0}
+            </div>
+          </div>
         </div>
       </div>
     </div>
