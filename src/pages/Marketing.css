@@ -1,5 +1,6 @@
 /* Base styles */
 .marketing {
+  position: relative;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f5f7fa;
   margin: 0;
@@ -198,6 +199,8 @@
   gap: 8px;
   margin-bottom: 20px;
   cursor: pointer;
+  margin-right: auto;
+  margin-left: 20px;
 }
 
 /* Scrollbar styles */
@@ -363,7 +366,7 @@
 
 /* Logout button */
 .marketing .logout-button {
-  position: fixed;
+  position: absolute;
   top: 20px;
   right: 40px;
   z-index: 1000;

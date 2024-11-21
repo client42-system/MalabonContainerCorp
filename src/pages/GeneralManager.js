@@ -56,7 +56,7 @@ function GeneralManager() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = fetchOrders();
+    const unsubscribe = setupRealtimeListeners();
     fetchMaintenanceTasks();
     fetchProductionData();
     fetchUsers();
@@ -64,7 +64,7 @@ function GeneralManager() {
     return () => unsubscribe();
   }, []);
 
-  const fetchOrders = () => {
+  const setupRealtimeListeners = () => {
     const ordersRef = collection(db, 'orders');
     const q = query(
       ordersRef,
@@ -82,7 +82,7 @@ function GeneralManager() {
       
       setOrders(fetchedOrders);
     }, (error) => {
-      console.error('Error fetching orders:', error);
+      console.error('Error setting up real-time listeners:', error);
     });
   };
 

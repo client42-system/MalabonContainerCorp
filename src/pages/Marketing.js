@@ -445,6 +445,9 @@ function MarketingDashboard() {
 
   return (
     <div className="marketing">
+      <button className="logout-button" onClick={handleLogout}>
+        <FaSignOutAlt /> Logout
+      </button>
       <h1 className="marketing-dashboard-title">Marketing Dashboard</h1>
       
       <div className="tabs-container">

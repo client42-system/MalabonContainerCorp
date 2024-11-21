@@ -3,7 +3,7 @@ import '../pages/PlantManager.css'
 import { FaSignOutAlt, FaEye, FaTruck, FaClipboardList, FaCheck, FaShippingFast, FaFlag } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebaseConfig'
-import { collection, getDocs, doc, updateDoc, query, where, orderBy } from 'firebase/firestore'
+import { collection, getDocs, doc, updateDoc, query, where, orderBy, onSnapshot } from 'firebase/firestore'
 
 export default function PlantManagerDashboard() {
   const [activeTab, setActiveTab] = useState('acceptedOrders')
@@ -21,79 +21,41 @@ export default function PlantManagerDashboard() {
 
   useEffect(() => {
     console.log('PlantManager component mounted');
-    fetchOrders();
+    const unsubscribe = setupRealtimeListeners();
+    return () => unsubscribe();
   }, []);
 
-  const fetchOrders = async () => {
-    setIsLoading(true);
-    try {
-      const ordersRef = collection(db, 'orders');
-      
-      // Get start and end dates for current year
-      const currentYear = new Date().getFullYear();
-      const startOfYear = new Date(currentYear, 0, 1).toISOString(); // January 1st
-      const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString(); // December 31st 23:59:59
-      
-      // Query for accepted orders
-      const acceptedOrdersQuery = query(
-        ordersRef,
-        where('status', '==', 'Pending'),
-        where('date', '>=', startOfYear),
-        where('date', '<=', endOfYear),
-        orderBy('date', 'desc')
-      );
-      
-      const acceptedSnapshot = await getDocs(acceptedOrdersQuery);
-      const acceptedOrdersData = acceptedSnapshot.docs.map(doc => ({
+  const setupRealtimeListeners = () => {
+    const ordersRef = collection(db, 'orders');
+    const currentYear = new Date().getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1).toISOString();
+    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
+
+    // Create a single listener for all order statuses
+    const q = query(
+      ordersRef,
+      where('date', '>=', startOfYear),
+      where('date', '<=', endOfYear),
+      orderBy('date', 'desc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const allOrders = snapshot.docs.map(doc => ({
         ...doc.data(),
         firestoreId: doc.id,
         id: doc.data().id || doc.id
       }));
-      
-      setAcceptedOrders(acceptedOrdersData);
-      console.log('Fetched accepted orders:', acceptedOrdersData);
 
-      // Query for completed orders
-      const completedOrdersQuery = query(
-        ordersRef,
-        where('status', '==', 'COMPLETED'),
-        where('date', '>=', startOfYear),
-        where('date', '<=', endOfYear),
-        orderBy('date', 'desc')
-      );
+      // Filter orders based on their status
+      setAcceptedOrders(allOrders.filter(order => order.status === 'Pending'));
+      setCompletedOrders(allOrders.filter(order => order.status === 'COMPLETED'));
+      setOutForDeliveryOrders(allOrders.filter(order => order.status === 'OUT_FOR_DELIVERY'));
       
-      const completedSnapshot = await getDocs(completedOrdersQuery);
-      const completedOrdersData = completedSnapshot.docs.map(doc => ({
-        ...doc.data(),
-        firestoreId: doc.id,
-        id: doc.data().id || doc.id
-      }));
-      
-      setCompletedOrders(completedOrdersData);
-
-      // Query for out for delivery orders
-      const outForDeliveryOrdersQuery = query(
-        ordersRef,
-        where('status', '==', 'OUT_FOR_DELIVERY'),
-        where('date', '>=', startOfYear),
-        where('date', '<=', endOfYear),
-        orderBy('date', 'desc')
-      );
-      
-      const outForDeliverySnapshot = await getDocs(outForDeliveryOrdersQuery);
-      const outForDeliveryOrdersData = outForDeliverySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        firestoreId: doc.id,
-        id: doc.data().id || doc.id
-      }));
-      
-      setOutForDeliveryOrders(outForDeliveryOrdersData);
-
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
       setIsLoading(false);
-    }
+    }, (error) => {
+      console.error('Error setting up real-time listeners:', error);
+      setIsLoading(false);
+    });
   };
 
   const handleCompleteOrder = async (order) => {
@@ -104,7 +66,6 @@ export default function PlantManagerDashboard() {
         completedAt: new Date().toISOString(),
         completedBy: auth.currentUser.uid
       });
-      fetchOrders(); // Refresh the orders after update
     } catch (error) {
       console.error('Error completing order:', error);
     }
@@ -120,7 +81,6 @@ export default function PlantManagerDashboard() {
       });
       setIsSchedulingModalOpen(false);
       setSchedulingData({ deliveryDate: '', selectedOrder: null });
-      fetchOrders(); // Refresh the orders list
     } catch (error) {
       console.error('Error scheduling delivery:', error);
     }
@@ -133,7 +93,6 @@ export default function PlantManagerDashboard() {
         status: 'DELIVERED',
         deliveredDate: new Date().toISOString()
       });
-      fetchOrders(); // This will update all order lists
     } catch (error) {
       console.error('Error marking order as delivered:', error);
     }
@@ -167,7 +126,7 @@ export default function PlantManagerDashboard() {
       });
 
       setIsSchedulingModalOpen(false);
-      fetchOrders();
+      setSchedulingData({ deliveryDate: '', selectedOrder: null });
     } catch (error) {
       console.error('Error scheduling delivery:', error);
     }

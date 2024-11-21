@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import '../pages/Accountant.css'
-import { FaSignOutAlt, FaExchangeAlt, FaFileInvoiceDollar, FaExclamationTriangle, FaTimes, FaEye, FaMoneyBillWave } from 'react-icons/fa'
+import { FaSignOutAlt, FaExchangeAlt, FaFileInvoiceDollar, FaExclamationTriangle, FaTimes, FaEye, FaMoneyBillWave, FaCheck } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebaseConfig'
 import { collection, getDocs, query, where, addDoc, updateDoc, doc, orderBy } from 'firebase/firestore'
@@ -17,6 +17,7 @@ export default function AccountantDashboard() {
   const [showWarningModal, setShowWarningModal] = useState(false)
   const [paymentModal, setPaymentModal] = useState({ isOpen: false, order: null, amountPaid: '' });
   const [confirmPayment, setConfirmPayment] = useState({ show: false, order: null });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const navigate = useNavigate()
 
@@ -65,151 +66,167 @@ export default function AccountantDashboard() {
       return;
     }
 
-    // Add amount validation
     if (typeof selectedOrder.amount !== 'number') {
       setShowWarningModal(true);
       return;
     }
 
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-      margins: { top: 20, right: 20, bottom: 20, left: 20 }
-    });
-
-    // Set initial y position
-    let y = 30;
-
-    // Add company header
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("MALABON CONTAINER CORPORATION", doc.internal.pageSize.width / 2, y, { align: "center" });
-    
-    y += 8;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("123 Sample Street, Malabon City", doc.internal.pageSize.width / 2, y, { align: "center" });
-    
-    y += 6;
-    doc.text("Tel: (02) 1234-5678", doc.internal.pageSize.width / 2, y, { align: "center" });
-    
-    // Add line separator
-    y += 8;
-    doc.setLineWidth(0.5);
-    doc.line(20, y, doc.internal.pageSize.width - 20, y);
-
-    // Add receipt title
-    y += 12;
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("OFFICIAL RECEIPT", doc.internal.pageSize.width / 2, y, { align: "center" });
-
-    // Add line separator
-    y += 8;
-    doc.line(20, y, doc.internal.pageSize.width - 20, y);
-
-    // Add order details with more space for address
-    y += 15;
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-
-    // Left column details
-    const leftX = 25;
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, leftX, y);
-    y += 8;
-    doc.text(`Customer: ${selectedOrder.customer}`, leftX, y);
-    y += 8;
-    doc.text(`Order ID: ${selectedOrder.id}`, leftX, y);
-    y += 8;
-    doc.text(`Contact: ${selectedOrder.contactNumber || 'N/A'}`, leftX, y);
-
-    // Right column details with wrapped address
-    const rightX = doc.internal.pageSize.width / 2 + 10;
-    const maxWidth = 80; // Maximum width for address text
-    
-    // Reset y for right column
-    y -= 24;
-    
-    // Split address into multiple lines if needed
-    const addressLines = doc.splitTextToSize(`Address: ${selectedOrder.address || 'N/A'}`, maxWidth);
-    doc.text(addressLines, rightX, y);
-    
-    y += addressLines.length * 5 + 3; // Adjust y based on number of address lines
-    doc.text(`Type: ${selectedOrder.type}`, rightX, y);
-    y += 8;
-    doc.text(`Status: ${selectedOrder.status}`, rightX, y);
-
-    // Add line separator before table
-    y += 15;
-    doc.line(20, y, doc.internal.pageSize.width - 20, y);
-    y += 8;
-
-    // Create simplified table with clean numbers
-    doc.autoTable({
-      startY: y,
-      head: [["Description", "Quantity", "Amount"]],
-      body: [[
-        selectedOrder.type || 'N/A',
-        selectedOrder.quantity?.toString() || '0',
-        `₱${selectedOrder.amount.toFixed(2)}`
-      ]],
-      theme: 'grid',
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontSize: 10,
-        fontStyle: 'bold',
-        halign: 'center',
-        cellPadding: 3
-      },
-      bodyStyles: {
-        fontSize: 10,
-        halign: 'center',
-        cellPadding: 3
-      },
-      columnStyles: {
-        0: { cellWidth: 90 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 40 }
-      },
-      margin: { left: 20, right: 20 },
-      tableWidth: 'auto'
-    });
-
-    // Add total amount without ± symbol
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFont("helvetica", "bold");
-    doc.text("Total Amount:", 120, finalY);
-    doc.text(`₱${selectedOrder.amount.toFixed(2)}`, 170, finalY, { align: "right" });
-
-    // Add line separator
-    doc.line(20, finalY + 5, doc.internal.pageSize.width - 20, finalY + 5);
-
-    // Add footer
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text("This is a computer-generated receipt.", doc.internal.pageSize.width / 2, finalY + 15, { align: "center" });
-    doc.text("Thank you for your business!", doc.internal.pageSize.width / 2, finalY + 20, { align: "center" });
-
     try {
-      // Instead of downloading, save to Firestore
-      const pdfOutput = doc.output('dataurlstring');
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [80, 150],
+        margins: { top: 5, right: 5, bottom: 5, left: 5 }
+      });
+
+      // Set initial y position
+      let y = 10;
+      const leftCol = 8;
+      const rightCol = doc.internal.pageSize.width - 8;
+
+      // Company name and details
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("MALABON CONTAINER CORPORATION", doc.internal.pageSize.width / 2, y, { align: "center" });
       
-      // Create a new payment report document
-      const paymentReportRef = collection(db, 'paymentReports');
-      await addDoc(paymentReportRef, {
+      y += 4;
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text("123 Sample Street, Malabon City", doc.internal.pageSize.width / 2, y, { align: "center" });
+      
+      y += 3;
+      doc.text("Tel: (02) 1234-5678", doc.internal.pageSize.width / 2, y, { align: "center" });
+      
+      // Modern divider
+      y += 6;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.1);
+      doc.line(5, y, doc.internal.pageSize.width - 5, y);
+
+      // Receipt title
+      y += 6;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.text("RECEIPT", doc.internal.pageSize.width / 2, y, { align: "center" });
+
+      // Order Details
+      y += 8;
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+
+      // Date and Order ID
+      doc.setFont("helvetica", "bold");
+      doc.text("DATE", leftCol, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(new Date().toLocaleDateString(), rightCol, y, { align: "right" });
+      
+      y += 4;
+      doc.setFont("helvetica", "bold");
+      doc.text("ORDER ID", leftCol, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(selectedOrder.id, rightCol, y, { align: "right" });
+
+      // Customer Details Section
+      y += 8;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("CUSTOMER DETAILS", leftCol, y);
+      
+      y += 4;
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text("Customer Name:", leftCol, y);
+      doc.text(selectedOrder.customer || 'N/A', rightCol, y, { align: "right" });
+      
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      doc.text("Contact Number:", leftCol, y);
+      doc.text(selectedOrder.contactNumber || 'N/A', rightCol, y, { align: "right" });
+      
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      doc.text("Delivery Address:", leftCol, y);
+      // Handle long addresses by wrapping text
+      const maxWidth = 45;
+      const addressLines = doc.splitTextToSize(selectedOrder.address || 'N/A', maxWidth);
+      doc.text(addressLines, rightCol, y, { align: "right" });
+      y += (addressLines.length * 3);
+      
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      doc.text("Notes:", leftCol, y);
+      const notesLines = doc.splitTextToSize(selectedOrder.notes || 'N/A', maxWidth);
+      doc.text(notesLines, rightCol, y, { align: "right" });
+      y += (notesLines.length * 3);
+
+      // Add some extra spacing before the order details table
+      y += 4;
+
+      // Order Details Table
+      y += 8;
+      doc.autoTable({
+        startY: y,
+        head: [["ITEM", "QTY", "AMOUNT"]],
+        body: [[
+          selectedOrder.type,
+          selectedOrder.quantity,
+          selectedOrder.amount.toLocaleString()
+        ]],
+        styles: {
+          fontSize: 7,
+          cellPadding: 2,
+        },
+        headStyles: {
+          fillColor: [51, 51, 51],
+          textColor: [255, 255, 255],
+          fontSize: 7,
+          fontStyle: 'bold',
+        },
+        theme: 'grid',
+        margin: { left: 5, right: 5 },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 15, halign: 'center' },
+          2: { cellWidth: 25, halign: 'right' }
+        }
+      });
+
+      // Total amount
+      y = doc.autoTable.previous.finalY + 8;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("TOTAL AMOUNT:", leftCol, y);
+      doc.text(selectedOrder.amount.toLocaleString(), rightCol, y, { align: "right" });
+
+      // Simple footer
+      y += 10;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(5, y, doc.internal.pageSize.width - 5, y);
+      
+      y += 6;
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text("Thank you for your business!", doc.internal.pageSize.width / 2, y, { align: "center" });
+
+      // Save to Firestore
+      const pdfData = doc.output('dataurlstring');
+      await addDoc(collection(db, 'paymentReports'), {
+        orderId: selectedOrder.id,
+        customerName: selectedOrder.customer,
         date: new Date().toISOString(),
         totalAmount: selectedOrder.amount,
-        orderCount: 1,
-        report: pdfOutput,
-        orderId: selectedOrder.id,
-        customerName: selectedOrder.customer
+        report: pdfData,
+        generatedBy: auth.currentUser.uid
       });
-      
-      setError(null);
-      alert('Receipt generated and sent to Office Secretary successfully!');
+
+      // Show success message and close modal
       setIsReportModalOpen(false);
+      setShowSuccessModal(true);
+      
+      setTimeout(() => {
+        setShowSuccessModal(false);
+      }, 3000);
+
     } catch (error) {
       console.error('Error generating report:', error);
       setError('Failed to generate report: ' + error.message);
@@ -349,6 +366,20 @@ export default function AccountantDashboard() {
     );
   };
 
+  const renderSuccessModal = () => {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content success-modal">
+          <div className="success-icon">
+            <FaCheck />
+          </div>
+          <h2>Success!</h2>
+          <p>Report has been generated and sent to Office Secretary</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="accountant">
       <div className="dashboard-container">
@@ -443,6 +474,7 @@ export default function AccountantDashboard() {
         {isReportModalOpen && renderOrderDetails()}
         {showWarningModal && renderWarningModal()}
         {confirmPayment.show && renderConfirmPayment()}
+        {showSuccessModal && renderSuccessModal()}
       </div>
     </div>
   )

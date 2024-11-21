@@ -4,7 +4,7 @@ import { X, Eye, EyeOff } from 'lucide-react';
 import '../pages/OfficeSecretary.css';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebaseConfig';
-import { collection, getDocs, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import AdminPanel from '../components/AdminPanel';
 
@@ -36,42 +36,66 @@ export default function OfficeSecretaryDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchArchivedOrders();
-    fetchPaymentReports();
-    fetchArchivedMaintenance();
+    const checkAdminAccess = async () => {
+      if (!auth.currentUser) {
+        navigate('/login');
+        return;
+      }
+
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (!userDoc.exists() || userDoc.data().jobPosition !== 'Office Secretary') {
+        navigate('/login');
+      }
+    };
+
+    checkAdminAccess();
+  }, [navigate]);
+
+  useEffect(() => {
+    // Setup real-time listeners
+    const unsubscribeOrders = setupArchivedOrdersListener();
+    const unsubscribeReports = setupPaymentReportsListener();
+    const unsubscribeMaintenance = setupArchivedMaintenanceListener();
     fetchUsers();
+
+    // Cleanup listeners on unmount
+    return () => {
+      unsubscribeOrders && unsubscribeOrders();
+      unsubscribeReports && unsubscribeReports();
+      unsubscribeMaintenance && unsubscribeMaintenance();
+    };
   }, []);
 
-  const fetchArchivedOrders = async () => {
-    try {
-      const ordersRef = collection(db, 'orders');
-      const q = query(
-        ordersRef,
-        where('status', 'in', ['DELIVERED', 'REJECTED']),
-        orderBy('date', 'desc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const archivedOrders = querySnapshot.docs.map(doc => ({
+  const setupArchivedOrdersListener = () => {
+    const ordersRef = collection(db, 'orders');
+    const q = query(
+      ordersRef,
+      where('status', 'in', ['DELIVERED', 'REJECTED']),
+      orderBy('date', 'desc')
+    );
+    
+    return onSnapshot(q, (snapshot) => {
+      const archivedOrders = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
       
       setArchivedOrders(archivedOrders);
-    } catch (error) {
-      console.error('Error fetching archived orders:', error);
-    }
+    }, (error) => {
+      console.error('Error setting up orders listener:', error);
+      setError('Failed to load archived orders');
+    });
   };
 
-  const fetchPaymentReports = async () => {
-    try {
-      const reportsRef = collection(db, 'paymentReports');
-      const q = query(reportsRef, orderBy('date', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const reports = querySnapshot.docs.map(docSnapshot => {
-        const data = docSnapshot.data();
+  const setupPaymentReportsListener = () => {
+    const reportsRef = collection(db, 'paymentReports');
+    const q = query(reportsRef, orderBy('date', 'desc'));
+
+    return onSnapshot(q, (snapshot) => {
+      const reports = snapshot.docs.map(doc => {
+        const data = doc.data();
         return {
-          id: docSnapshot.id,
+          id: doc.id,
           date: data.date,
           generatedBy: 'Accountant',
           customerName: data.customerName || 'N/A',
@@ -82,28 +106,30 @@ export default function OfficeSecretaryDashboard() {
       });
       
       setPaymentReports(reports);
-    } catch (error) {
-      console.error('Error fetching payment reports:', error);
-      setError('Failed to load payment reports. Please try again later.');
-    }
+    }, (error) => {
+      console.error('Error setting up reports listener:', error);
+      setError('Failed to load payment reports');
+    });
   };
 
-  const fetchArchivedMaintenance = async () => {
-    try {
-      const maintenanceRef = collection(db, 'archivedMaintenance');
-      const q = query(
-        maintenanceRef,
-        orderBy('completedAt', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      const maintenance = querySnapshot.docs.map(doc => ({
+  const setupArchivedMaintenanceListener = () => {
+    const maintenanceRef = collection(db, 'archivedMaintenance');
+    const q = query(
+      maintenanceRef,
+      orderBy('completedAt', 'desc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const maintenance = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      
       setArchivedMaintenance(maintenance);
-    } catch (error) {
-      console.error('Error fetching archived maintenance:', error);
-    }
+    }, (error) => {
+      console.error('Error setting up maintenance listener:', error);
+      setError('Failed to load archived maintenance records');
+    });
   };
 
   const fetchUsers = async () => {
@@ -319,12 +345,12 @@ export default function OfficeSecretaryDashboard() {
     }
   };
 
-  const handleResetPassword = async (userEmail) => {
+  const handlePasswordReset = async (userEmail) => {
     try {
       await sendPasswordResetEmail(auth, userEmail);
       alert('Password reset email sent successfully');
     } catch (error) {
-      alert(`Error sending reset email: ${error.message}`);
+      alert(`Error sending password reset email: ${error.message}`);
     }
   };
 
@@ -481,7 +507,7 @@ export default function OfficeSecretaryDashboard() {
                           <td className="action-buttons">
                             <button 
                               className="reset-btn"
-                              onClick={() => handleResetPassword(user.email)}
+                              onClick={() => handlePasswordReset(user.email)}
                             >
                               <FaKey /> Reset Password
                             </button>
