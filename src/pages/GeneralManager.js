@@ -18,6 +18,7 @@ import { auth, db } from '../firebaseConfig';
 import { collection, getDocs, doc, updateDoc, query, orderBy, onSnapshot, where, addDoc, limit, deleteDoc, getDoc } from 'firebase/firestore';
 import AdminPanel from '../components/AdminPanel';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { X, Eye, EyeOff } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -53,6 +54,7 @@ function GeneralManager() {
     userId: null,
     userName: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -734,12 +736,6 @@ function GeneralManager() {
                               <FaKey /> Reset Password
                             </button>
                             <button 
-                              className="disable-btn"
-                              onClick={() => handleDisableAccount(user.id)}
-                            >
-                              <FaBan /> {user.disabled ? 'Enable' : 'Disable'}
-                            </button>
-                            <button 
                               className="delete-btn"
                               onClick={() => setDeleteConfirmation({ 
                                 isOpen: true, 
@@ -779,6 +775,82 @@ function GeneralManager() {
                     Delete Account
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+          {isCreateUserModalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <button 
+                  className="modal-close"
+                  onClick={() => setIsCreateUserModalOpen(false)}
+                >
+                  <X size={20} />
+                </button>
+                <h2>Create New User</h2>
+                <form onSubmit={handleCreateUser} className="create-user-form">
+                  <div className="form-group">
+                    <label htmlFor="fullName">Full Name</label>
+                    <input
+                      type="text"
+                      id="fullName"
+                      placeholder="Enter full name"
+                      value={newUser.name}
+                      onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="email">Email</label>
+                    <input
+                      type="email"
+                      id="email"
+                      placeholder="Enter email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <div className="password-input-container">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        id="password"
+                        placeholder="Enter password"
+                        value={newUser.password}
+                        onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="position">Position</label>
+                    <select
+                      id="position"
+                      value={newUser.jobPosition}
+                      onChange={(e) => setNewUser({...newUser, jobPosition: e.target.value})}
+                      required
+                    >
+                      <option value="">Select Position</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Plant Manager">Plant Manager</option>
+                      <option value="Accountant">Accountant</option>
+                      <option value="Plant Supervisor">Plant Supervisor</option>
+                      <option value="Office Secretary">Office Secretary</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="create-btn">
+                    <FaUserPlus /> Create User
+                  </button>
+                </form>
               </div>
             </div>
           )}

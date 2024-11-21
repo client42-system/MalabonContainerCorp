@@ -512,12 +512,6 @@ export default function OfficeSecretaryDashboard() {
                               <FaKey /> Reset Password
                             </button>
                             <button 
-                              className="disable-btn"
-                              onClick={() => handleDisableAccount(user.id)}
-                            >
-                              <FaBan /> {user.disabled ? 'Enable' : 'Disable'}
-                            </button>
-                            <button 
                               className="delete-btn"
                               onClick={() => setDeleteConfirmation({ 
                                 isOpen: true, 
