@@ -11,7 +11,7 @@ export const importHistoricalData = async (excelFile) => {
 
     for (const row of data) {
       const orderData = {
-        id: row['ID NUM'],
+        id: row['ID'],
         customer: row['CUSTOMER'],
         type: row['TYPE'],
         quantity: parseInt(row['QUANTITY']),

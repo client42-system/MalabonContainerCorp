@@ -938,12 +938,6 @@ export default function CEO() {
               <FaCog /> Maintenance Analytics
             </button>
 
-            <button 
-              className="tab"
-              onClick={() => navigate('/data-import')}
-            >
-              <FaFileImport /> Import Data
-            </button>
           </div>
         </div>
 

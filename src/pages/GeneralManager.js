@@ -840,11 +840,13 @@ function GeneralManager() {
                       required
                     >
                       <option value="">Select Position</option>
+                      <option value="General Manager">General Manager</option>
                       <option value="Marketing">Marketing</option>
                       <option value="Plant Manager">Plant Manager</option>
                       <option value="Accountant">Accountant</option>
                       <option value="Plant Supervisor">Plant Supervisor</option>
                       <option value="Office Secretary">Office Secretary</option>
+                      <option value="CEO">CEO</option>
                     </select>
                   </div>
                   <button type="submit" className="create-btn">

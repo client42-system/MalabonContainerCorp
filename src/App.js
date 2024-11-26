@@ -17,6 +17,7 @@ import './index.css';
 import './pages/SignUp.css';
 import './pages/ForgotPassword.css';
 import { useAuth } from './hooks/useAuth';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Define protected routes
 const protectedRoutes = [
@@ -31,43 +32,45 @@ const protectedRoutes = [
 ];
 
 function App() {
-  const { user, loading } = useAuth();
+  const { currentUser, loading } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginForms />} />
-          <Route path="/login/:position" element={<LoginForm />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password/:position" element={<ForgotPassword />} />
-          
-          {/* Protected Routes */}
-          {protectedRoutes.map(({ path, element: Element }) => (
-            <Route
-              key={path}
-              path={path}
-              element={
-                user && !user.isDisabled ? (
-                  <Element />
-                ) : (
-                  <Navigate to="/login" replace />
-                )
-              }
-            />
-          ))}
-          
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginForms />} />
+            <Route path="/login/:position" element={<LoginForm />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password/:position" element={<ForgotPassword />} />
+            
+            {/* Protected Routes */}
+            {protectedRoutes.map(({ path, element: Element }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  currentUser ? (
+                    <Element />
+                  ) : (
+                    <Navigate to="/login" replace />
+                  )
+                }
+              />
+            ))}
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

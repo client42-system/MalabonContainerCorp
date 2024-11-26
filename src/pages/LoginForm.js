@@ -3,9 +3,10 @@ import { Briefcase, Lock, Tag, Factory, Calculator, ClipboardList, User, Crown, 
 import { useParams, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
-import { getDoc, doc } from 'firebase/firestore';
+import { getDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import '../pages/LoginForm.css';
+import { useAuth } from '../contexts/AuthContext';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ function LoginForm() {
   const { position } = useParams();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const { tabId, setCurrentUser } = useAuth();
 
   const icons = {
     "General Manager": Briefcase,
@@ -31,54 +33,100 @@ function LoginForm() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login successful');
+      
+      // Create user session data
+      const userData = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        position: position
+      };
 
-      const user = userCredential.user;
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      // Store in session storage with tab-specific key
+      sessionStorage.setItem(`user_${tabId}`, JSON.stringify(userData));
+      setCurrentUser(userData);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log('User Data:', userData);
-        console.log('Position Parameter:', position);
+      // Get user document with more detailed logging
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      console.log('Checking Firestore document:', userDocRef.path);
+      
+      const userDoc = await getDoc(userDocRef);
+      console.log('Firestore response:', userDoc.exists() ? 'Document exists' : 'Document does not exist');
 
-        if (userData.jobPosition.toLowerCase() !== position.toLowerCase()) {
-          alert('You cannot log in as a different job position. Please sign up again with the correct position.');
+      if (!userDoc.exists()) {
+        // If user doesn't exist in Firestore, create their document
+        try {
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            email: email,
+            jobPosition: position,
+            createdAt: new Date().toISOString(),
+            uid: userCredential.user.uid
+          });
+          console.log('Created new user document in Firestore');
+          
+          // Fetch the document again
+          const newUserDoc = await getDoc(userDocRef);
+          if (newUserDoc.exists()) {
+            const userData = newUserDoc.data();
+            handleSuccessfulLogin(userData);
+          }
+        } catch (firestoreError) {
+          console.error('Error creating user document:', firestoreError);
+          setError('Error creating user profile. Please try again.');
           return;
         }
-
-        alert('Login Successful!');
-
-        switch (userData.jobPosition) {
-          case 'General Manager':
-            navigate('/GeneralManager');
-            break;
-          case 'Marketing':
-            navigate('/marketing');
-            break;
-          case 'Plant Manager':
-            navigate('/plant-manager');
-            break;
-          case 'Accountant':
-            navigate('/accountant');
-            break;
-          case 'Plant Supervisor':
-            navigate('/plant-supervisor');
-            break;
-          case 'Office Secretary':
-            navigate('/office-secretary');
-            break;
-          case 'CEO':
-            navigate('/ceo');
-            break;
-          default:
-            navigate('/home');
-        }
       } else {
-        alert('User not found.');
+        const userData = userDoc.data();
+        handleSuccessfulLogin(userData);
       }
     } catch (error) {
-      console.error('Error logging in:', error.message);
-      setError('Invalid email or password. Please try again.');
+      console.error('Login error:', error);
+      if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email.');
+      } else if (error.code === 'auth/wrong-password') {
+        setError('Incorrect password.');
+      } else {
+        setError(`Login error: ${error.message}`);
+      }
+    }
+  };
+
+  // Separate function to handle successful login
+  const handleSuccessfulLogin = (userData) => {
+    if (userData.jobPosition?.toLowerCase() !== position?.toLowerCase()) {
+      setError('You cannot log in as a different job position. Please use the correct position.');
+      return;
+    }
+
+    console.log('Login successful for position:', userData.jobPosition);
+    
+    // Add debug log to check the exact position value
+    console.log('Position value for switch:', userData.jobPosition);
+
+    switch (userData.jobPosition.toLowerCase()) {  // Convert to lowercase for comparison
+      case 'general manager':
+        navigate('/GeneralManager');
+        break;
+      case 'marketing':
+        navigate('/Marketing');  // Make sure this matches your route exactly
+        break;
+      case 'plant manager':
+        navigate('/plant-manager');
+        break;
+      case 'accountant':
+        navigate('/accountant');
+        break;
+      case 'plant supervisor':
+        navigate('/plant-supervisor');
+        break;
+      case 'office secretary':
+        navigate('/office-secretary');
+        break;
+      case 'ceo':
+        navigate('/ceo');
+        break;
+      default:
+        console.log('No matching route found for position:', userData.jobPosition);
+        navigate('/login');  // Change this to navigate to selection page if no match
     }
   };
 

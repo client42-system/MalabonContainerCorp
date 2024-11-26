@@ -15,7 +15,7 @@ export const importExcelData = async (file) => {
 
         for (const row of jsonData) {
           const orderData = {
-            id: row['ID NUM'],
+            id: row['ID'],
             customer: row['CUSTOMER'],
             type: row['TYPE'],
             quantity: parseInt(row['QUANTITY']),

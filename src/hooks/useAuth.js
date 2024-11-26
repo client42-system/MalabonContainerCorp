@@ -1,37 +1,27 @@
 import { useState, useEffect } from 'react';
-import { auth, db } from '../firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { auth } from '../firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
-export function useAuth() {
-  const [user, setUser] = useState(null);
+export const useAuth = () => {
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            if (userData.isDisabled) {
-              await auth.signOut();
-              setUser(null);
-            } else {
-              setUser({ ...firebaseUser, ...userData });
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          setUser(null);
-        }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Get additional user data from session storage
+        const sessionUser = JSON.parse(sessionStorage.getItem('currentUser'));
+        setCurrentUser({ ...user, ...sessionUser });
       } else {
-        setUser(null);
+        setCurrentUser(null);
+        // Clear session storage when user is signed out
+        sessionStorage.removeItem('currentUser');
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
-  return { user, loading };
-} 
+  return { currentUser, loading };
+}; 

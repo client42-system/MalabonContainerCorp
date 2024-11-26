@@ -592,6 +592,7 @@ export default function OfficeSecretaryDashboard() {
                           required
                         >
                           <option value="">Select Position</option>
+                           <option value="General Manager">General Manager</option>
                           <option value="Marketing">Marketing</option>
                           <option value="Plant Manager">Plant Manager</option>
                           <option value="Accountant">Accountant</option>

@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, browserLocalPersistence, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -12,11 +12,12 @@ const firebaseConfig = {
     measurementId: "G-1YXFX5GKZ8"
 };
 
-// Initialize Firebase
+// Initialize Firebase with custom auth instance
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence);
+const db = getFirestore(app);
 
-// Initialize services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export { auth, db };
 
 export default app;
