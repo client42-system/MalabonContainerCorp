@@ -18,6 +18,7 @@ export default function AccountantDashboard() {
   const [paymentModal, setPaymentModal] = useState({ isOpen: false, order: null, amountPaid: '' });
   const [confirmPayment, setConfirmPayment] = useState({ show: false, order: null });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const navigate = useNavigate()
 
@@ -34,14 +35,11 @@ export default function AccountantDashboard() {
       );
       
       const querySnapshot = await getDocs(q);
-      const fetchedOrders = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          firestoreId: doc.id,
-          paymentStatus: data.paymentStatus || 'UNPAID'
-        };
-      });
+      const fetchedOrders = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        firestoreId: doc.id,
+        paymentStatus: doc.data().paymentStatus || 'UNPAID'
+      }));
       
       setOrders(fetchedOrders);
     } catch (error) {
@@ -247,7 +245,10 @@ export default function AccountantDashboard() {
 
   const handlePayment = async (order) => {
     try {
-      // Check if firestoreId exists
+      setIsProcessing(true);
+      console.log('Processing payment for order:', order);
+      console.log('Firestore ID:', order.firestoreId);
+
       if (!order.firestoreId) {
         setError('Error: Could not find document ID');
         return;
@@ -255,16 +256,25 @@ export default function AccountantDashboard() {
 
       const orderRef = doc(db, 'orders', order.firestoreId);
       
-      await updateDoc(orderRef, {
+      const paymentUpdate = {
         paymentStatus: 'PAID',
-        paymentDate: new Date().toISOString()
-      });
+        paymentDate: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        updatedBy: auth.currentUser.uid
+      };
+
+      await updateDoc(orderRef, paymentUpdate);
+
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
 
       setConfirmPayment({ show: false, order: null });
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error('Error updating payment status:', error);
       setError('Failed to process payment: ' + error.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
